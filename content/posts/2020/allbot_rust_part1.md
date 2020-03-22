@@ -11,7 +11,7 @@ After reading [The Rust Programming Language book](https://www.amazon.com/Rust-P
 
 I knew that Rust targeted RISC-V, but it even had the support specifically for the HiFive1 board!
 
-With that, the first objective was typical embedded "Hello World!"--to blink the on-board LED. The [RISC-V Rust quick start](https://github.com/riscv-rust/riscv-rust-quickstart) project README includes a very detailed description of the process from getting the Rust RISC-V target, GCC toolchain, and OpenOCD programmer (JLink if you have Revision B), down to building and running the project. Since I have Revision A of the HiFive1 board, the Cargo.toml needed this change to disable peripherals that are only available in Revision B:
+With that, the first objective is typical embedded "Hello World!"--to blink the on-board LED. The [RISC-V Rust quick start](https://github.com/riscv-rust/riscv-rust-quickstart) project README includes a very detailed description of the process from getting the Rust RISC-V target, GCC toolchain, and OpenOCD programmer (JLink if you have Revision B), down to building and running the project. Since I have Revision A of the HiFive1 board, the Cargo.toml needs this change to disable peripherals that are only available in Revision B:
 
 ```
 features = ["board-hifive1"]
@@ -118,9 +118,9 @@ fn main() -> ! {
 
 `#![no_std]` specifies that our binary will not link to the standard crate. Instead, it will link to its subset--[the core crate](https://doc.rust-lang.org/core/). The reason for this is that the standard crate assumes that a full-fledged operating system is present. The core crate is suitable for bare-metal environments. 
 
-`#![no_main]` specified that our binary is not using the standard main interface that OS programs use. Instead of setting the OS process environment and preparing the command line arguments, our main function will be called immediately when the device is powered on.
+`#![no_main]` specifies that our binary is not using the standard main interface that OS programs use. Instead of setting the OS process environment and preparing the command line arguments, our main function will be called immediately when the device is powered on.
 
-`extern crate panic_halt;` This crate provides a default panic handler that goes into an infinite loop. It is possible to override this with a custom panic handler that may, for instance, print panic details to the serial pin.
+`extern crate panic_halt;` This crate provides a default panic handler that goes into an infinite loop. It is possible to override with a custom panic handler that may, for instance, print panic details to the serial pin.
 
 `#[entry]` is an attribute provided by the [riscv-rt crate](https://docs.rs/riscv-rt/). This attribute is used to mark the entry point of the program. 
 
