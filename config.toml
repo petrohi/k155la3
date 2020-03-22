@@ -1,7 +1,6 @@
 baseURL = "https://k155la3.blog"
 defaultContentLanguage = "en"
 enableRobotsTXT = true
-googleAnalytics = ""
 languageCode = "en-us"
 pygmentsCodeFences = true
 pygmentsStyle = "native"
