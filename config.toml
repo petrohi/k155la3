@@ -1,0 +1,37 @@
+baseURL = "https://k155la3.blog"
+defaultContentLanguage = "en"
+disqusShortname = "test"
+enableEmoji = true
+enableRobotsTXT = true
+googleAnalytics = ""
+languageCode = "en-us"
+pygmentsCodeFences = true
+pygmentsStyle = "native"
+pygmentsUseClasses =  true
+theme = "simplicity"
+title = "K155LA3"
+[author]
+  gravatarEmail = "peter.hizalev@gmail.com"
+  homepageText = "K155LA3"
+  name = "Peter Hizalev"
+  rss = "/posts/index.xml"
+[imaging]
+  anchor = "smart"
+  resampleFilter = "box"
+  quality = 75
+[outputs]
+  home = ["HTML"]
+  page = ["HTML"]
+  section = ["HTML", "RSS"]
+  taxonomy = ["HTML", "RSS"]
+  taxonomyTerm = ["HTML"]
+[params]
+  adsenseClient = ''
+  adsenseSlot = ''
+  description = "A blog about everything."
+  licence = "[Some Rights Reserved](http://creativecommons.org/licenses/by-sa/4.0/)."
+  displayPostLanguage = true
+[permalinks]
+  posts = "/:year/:month/:day/:slug/"
+[pygmentsOptions]
+  linenos = false
