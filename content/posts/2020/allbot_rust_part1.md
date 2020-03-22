@@ -7,7 +7,7 @@ language: en
 slug: learning-embedded-rust-by-building-riscv-powered-robot-part-1
 ---
 
-After reading [The Rust Programming Language book](https://www.amazon.com/Rust-Programming-Language-Covers-2018/dp/1718500440) and falling in love with the language, I was on the lookout for my first Rust project. In the "old hardware projects" box, I had a [HiFive1 board](https://www.sifive.com/boards/hifive1) with SiFive E310 RISC-V microcontroller, and [Velleman's Arduino based ALLBOT spider robot](https://www.vellemanstore.com/en/velleman-vr408-four-legged-allbot). Replacing Arduino with HiFive1 and rewriting ALLBOT's C-based firmware from the ground up in Rust felt exciting!
+After reading [The Rust Programming Language book](https://www.amazon.com/Rust-Programming-Language-Covers-2018/dp/1718500440) and falling in love with the language, I was on the lookout for my first Rust project. In the "old hardware projects" box, I had a [HiFive1 board](https://www.sifive.com/boards/hifive1) with SiFive FE310 RISC-V microcontroller, and [Velleman's Arduino based ALLBOT spider robot](https://www.vellemanstore.com/en/velleman-vr408-four-legged-allbot). Replacing Arduino with HiFive1 and rewriting ALLBOT's C-based firmware from the ground up in Rust felt exciting!
 
 I knew that Rust targeted RISC-V, but it even had the support specifically for the HiFive1 board!
 
@@ -130,7 +130,7 @@ fn main() -> ! {
 
 The next three lines configure clocks (core at 320MHz!), stdout over UART, and then initialize RGB LEDs. The [e310x Hardware Abstraction Layer (HAL) crate](https://docs.rs/e310x-hal/) implements these abstractions on top of PAC. Many of the traits implemented in e310x are coming from the [common Embedded HAL crate](https://docs.rs/embedded-hal/). This way, the code for standard devices such as UART is easily portable between embedded platforms. The [hifive1 board crate](https://docs.rs/hifive1/) is built on top of e310x HAL and implements the RGB LEDs, external clock, and pin assignments that are specific to the board.
 
-Next, we initialize HAL's Sleep abstraction that uses `mtimecmp` register of the E310's core-local interruptor device (CLINT) and clocks to convert time to ticks.
+Next, we initialize HAL's Sleep abstraction that uses `mtimecmp` register of the FE310's core-local interruptor device (CLINT) and clocks to convert time to ticks.
 
 `sprintln!("Starting blink loop");` Now we print the message to the serial pin. With the terminal connected to TX (1) pin and set to 115,200 bits per second, I was able to see it!
 
@@ -138,4 +138,4 @@ Next, we initialize HAL's Sleep abstraction that uses `mtimecmp` register of the
 
 Finally, we start the blinking loop with a 1-second sleep delay.
 
-That is it for part 1! In the next part, we will write Rust to control a servo motor with PWM (Pulse Width Modulation) peripheral by accessing hardware at the PAC level.
+That is it for part 1! In the next part, we will write Rust to control a servo motor with Pulse-Width Modulation peripheral by accessing hardware at the PAC level.
