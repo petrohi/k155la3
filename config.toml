@@ -1,7 +1,5 @@
 baseURL = "https://k155la3.blog"
 defaultContentLanguage = "en"
-disqusShortname = "test"
-enableEmoji = true
 enableRobotsTXT = true
 googleAnalytics = ""
 languageCode = "en-us"
