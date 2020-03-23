@@ -138,4 +138,4 @@ Next, we initialize HAL's Sleep abstraction that uses `mtimecmp` register of the
 
 Finally, we start the blinking loop with a 1-second sleep delay.
 
-That is it for part 1! In the next part, we will write Rust to control a servo motor with Pulse-Width Modulation peripheral by accessing hardware at the PAC level.
+That is it for part 1! In the [next part]({{< ref "/posts/2020/allbot_rust_part2" >}}), we will write Rust to control a servo motor with Pulse-Width Modulation peripheral by accessing hardware at the PAC level.
