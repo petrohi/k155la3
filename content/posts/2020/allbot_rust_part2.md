@@ -5,6 +5,8 @@ categories: [projects, allbot-rust]
 tags: [rust, riscv, allbot]
 language: en
 slug: learning-embedded-rust-by-building-riscv-powered-robot-part-2
+aliases:
+    - "/2020/03/22/learning-embedded-rust-by-building-riscv-powered-robot-part-2/"
 ---
 
 The ALLBOT spider uses the 9G servo motors to animate its legs. The Arduino implementation uses a [built-in servo library](https://www.arduino.cc/en/Reference/Servo) that allows assigning servo instance to a pin and then writing desired orientation degrees between 0 and 180. The e310x HAL does not have servo implementation, nor the Embedded HAL have the servo trait. Time to face the hardware at the lowest level!
