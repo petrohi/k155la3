@@ -90,7 +90,7 @@ fn main() -> ! {
     let clocks = hifive1::clock::configure(prci, aonclk, 208.mhz().into());
     let mut sleep = Sleep::new(core_peripherals.clint.mtimecmp, clocks);
 
-    pin!(pins, dig3).into_inverted_iof1();
+    pin!(pins, dig4).into_inverted_iof1();
 
     pwm1.cfg
         .write(|w| unsafe { w.enalways().bit(true).scale().bits(6) });
@@ -107,7 +107,7 @@ fn main() -> ! {
 
 First, we have the familiar clock configuration, except we set the desired core frequency to 208MHz.
 
-`pin!(pins, dig3).into_inverted_iof1();` Here we configure pin (3) that is attached to channel 0 of the PWM1 to connect to the IO function #1, which is the PWM.
+`pin!(pins, dig4).into_inverted_iof1();` Here we configure the pin that is attached to channel 0 of the PWM1 to connect to the IO function #1, which is the PWM.
 
 Next, we use `write` function from e310x PAC to write to PWM1 `cfg` register. Specifically, we set `enalways` bit to enable the PWM and set the `scale` bits to 6. The svd2rust tool [defines](https://docs.rs/svd2rust/#read--modify--write-api) the structure for `read`, `modify`, and `write` functions that are generated for the PAC.
 
