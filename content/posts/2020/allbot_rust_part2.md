@@ -1,6 +1,6 @@
 ---
 title: Learning embedded Rust by building RISC-V-powered robot - Part 2
-date: 2020-03-22T00:00:00
+date: 2020-03-28T00:00:00
 categories: [projects, allbot-rust]
 tags: [rust, riscv, allbot]
 language: en
