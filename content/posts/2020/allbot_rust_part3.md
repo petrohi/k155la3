@@ -113,12 +113,15 @@ fn duty_to_degrees(duty_0_degrees: u16, duty_180_degrees: u16, duty: u16) -> f64
 }
 ```
 
-With this in place, we can rewrite the loop to work with two servo motors at the same time by calling `Servo` trait `write` function polymorphically.
+With this in place, we can rewrite the loop to work with four servo motors and both PWMs at the same time by calling `Servo` trait `write` function polymorphically.
 
 ```rust
-let servo0 = PwmServo::new(pin!(pins, dig4), &pwm1, 3277, 6554);
-let servo1 = PwmServo::new(pin!(pins, dig3), &pwm1, 3277, 6554);
-let servos: [&dyn Servo; 2] = [&servo0, &servo1];
+let servos: [&dyn Servo; 4] = [
+    &PwmServo::new(pin!(pins, dig4), &pwm1, 3277, 6554),
+    &PwmServo::new(pin!(pins, dig3), &pwm1, 3277, 6554),
+    &PwmServo::new(pin!(pins, dig16), &pwm2, 3277, 6554),
+    &PwmServo::new(pin!(pins, dig17), &pwm2, 3277, 6554)
+];
 
 loop {
     sleep.delay_ms(1000u32);
@@ -137,7 +140,11 @@ loop {
 
 Note that if we try to create `PwmServo` for the wrong pin or PWM, the code won't compile. Also, if we accidentally instantiate more than one `PwmServo` for the same pin, it won't compile either!
 
-And, two servos are turning in-sync!
+And, the four servos are turning in-sync!
+
+![Four servos](/media/2020/allbot_rust_part3/four_servos.gif)
+
+You can see the [entire source](https://github.com/petrohi/allbot/blob/cfa9fddc6af2286cef6eb1bc7372fd350314cc89/src/main.rs) code for this part on GitHub.
 
 In the final part, we will complete the remaining abstractions needed to animate the spider robot and see it in action!
 
