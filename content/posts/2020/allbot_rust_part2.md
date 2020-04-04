@@ -119,4 +119,4 @@ And... the servo it turning!
 
 You may have noticed that the servo is not turning the entire 180 degrees range. It turns out the datasheet duty cycle specification is very approximate, and depending on the servo maker and even the individual servo motor, it is different. The approach here is to calibrate the range for the servo you have by making sure it turns almost to the limit. But be careful, turning over the limit may strip the gears!
 
-With that, we wrap part 2. In the next part, we will write a HAL-level abstraction for servo motor capable of animating multiple servo motors synchronously.
+With that, we wrap part 2. In the [next part]({{< relref "/posts/2020/allbot_rust_part3" >}}), we will write a HAL-level abstraction for servo motor capable of animating multiple servo motors synchronously.
