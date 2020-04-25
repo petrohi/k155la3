@@ -49,7 +49,7 @@ fn animate(moves: &[Move], speed: u32, sleep: &mut Sleep) -> () {
 }
 ```
 
-The `animate` function takes a slice of references to `Move` structures, and the total time of animation (`speed`). Given that we have 20 milliseconds PWM cycle, it makes sense to change the servo angle at a step that is no shorter than 20 milliseconds. With fixed 20 milliseconds per step (`STEP_SPEED`), the `annotation` function computes the delta angle to move at every animation step. With this, it writes the angle for each servo motor in lockstep with sleeping in-between.
+The `animate` function takes a slice of references to `Move` structures, and the total time of animation (`speed`). Given that we have 20 milliseconds PWM cycle, it makes sense to change the servo angle at a step that is no shorter than 20 milliseconds. With fixed 20 milliseconds per step (`STEP_SPEED`), the `animate` function computes the delta angle to move at every animation step. With this, it writes the angle for each servo motor in lockstep with 20 milliseconds of sleeping in-between.
 
 Note how we are using statically allocated `Vec` from an awesome [heapless](https://docs.rs/heapless) library, knowing that we have at most 8 moves that can participate in one animation. This invariant is enforced by unwrapping the `push` function result and therefore, will panic if slice with more than 8 moves was passed.
 
