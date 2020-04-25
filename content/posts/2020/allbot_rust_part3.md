@@ -180,5 +180,5 @@ And, the four servos are turning in-sync!
 
 You can see the [entire source](https://github.com/petrohi/allbot/blob/9e400f4366e98ba089189f8bd02565757a5af1de/src/main.rs) code for this part on GitHub.
 
-In the final part, we will complete the remaining abstractions needed to animate the spider robot and see it in action!
+In the [final part]({{< relref "/posts/2020/allbot_rust_part4" >}}), we will complete the remaining abstractions needed to animate the spider robot and see it in action!
 
