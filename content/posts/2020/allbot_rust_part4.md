@@ -9,38 +9,38 @@ slug: learning-embedded-rust-by-building-riscv-powered-robot-part-4
 
 Now that [we developed]({{< relref "/posts/2020/allbot_rust_part3" >}}) a high-level `Servo` trait that allows controlling servo motors, we can start writing code that will animate our spider bot by rotating multiple motors synchronously. The idea is that the robot's movement takes some fixed amount of time during which each moving motor may travel a different angle. Importantly, all moving motors should start and stop at the same time, and therefore, they will have different angular speeds. Such movements then are sequenced one after another to appear like a well-coordinated action.
 
-To implement this in Rust, we introduce the `Move` structure that captures a reference to a servo motor, desired degrees where it should be at the end of the animation, and the time the animation should take.
-
-Given that we have 20 milliseconds PWM cycle, it makes sense to change the servo angle at a step that is no shorter than 20 milliseconds. With fixed 20 milliseconds per step (`STEP_SPEED`), the `Move` structure only needs to contain degrees to move at every animation step.
+To implement this in Rust, we introduce the `Move` structure that captures a reference to a servo motor and the desired degrees where it should be at the end of the animation.
 
 ```rust
 struct Move<'a> {
     servo: &'a dyn Servo,
-    step: f64,
+    desired: Degrees,
 }
-
-const STEP_SPEED: u32 = 20;
 
 impl<'a> Move<'a> {
-    fn new(servo: &'a dyn Servo, desired: Degrees, speed: u32) -> Move<'a> {
-        let current = servo.read();
-        let step_num = speed / STEP_SPEED;
-        let step = (desired.0 - current.0) / step_num as f64;
-
-        Move { servo, step }
+    fn new(servo: &'a dyn Servo, desired: Degrees) -> Move<'a> {
+        Move { servo, desired }
     }
 }
-```
 
-The `animate` function takes a slice of references to `Move` structures, and the total time of animation. With this, it calculates and writes the angle for each servo motor in lockstep.
-
-Note that we changed the `degrees` function to round up and down to the boundaries instead of panicking. In other words, it sets to 0 when the input is <0 and to 180 when it is >180. This way, we are safe with rounding errors.
-
-```rust
 fn animate(moves: &[Move], speed: u32, sleep: &mut Sleep) -> () {
+    const STEP_SPEED: u32 = 20;
+    let step_num = speed / STEP_SPEED;
+
+    let mut deltas: Vec<_, U8> = Vec::new();
+
+    for m in moves {
+        let current = m.servo.read();
+        let delta = (m.desired.0 - current.0) / step_num as f64;
+
+        deltas.push(delta).unwrap();
+    }
     for _ in 0..(speed / STEP_SPEED) {
-        for m in moves {
-            let new_degrees = m.servo.read().0 + m.step;
+        for i in 0..moves.len() {
+            let m = &moves[i];
+            let delta = deltas[i];
+
+            let new_degrees = m.servo.read().0 + delta;
             m.servo.write(new_degrees.degrees());
         }
 
@@ -48,6 +48,12 @@ fn animate(moves: &[Move], speed: u32, sleep: &mut Sleep) -> () {
     }
 }
 ```
+
+The `animate` function takes a slice of references to `Move` structures, and the total time of animation (`speed`). Given that we have 20 milliseconds PWM cycle, it makes sense to change the servo angle at a step that is no shorter than 20 milliseconds. With fixed 20 milliseconds per step (`STEP_SPEED`), the `annotation` function computes the delta angle to move at every animation step. With this, it writes the angle for each servo motor in lockstep with sleeping in-between.
+
+Note how we are using statically allocated `Vec` from an awesome [heapless](https://docs.rs/heapless) library, knowing that we have at most 8 moves that can participate in one animation. This invariant is enforced by unwrapping the `push` function result and therefore, will panic if slice with more than 8 moves was passed.
+
+Also, note that we changed the `degrees` function to round up and down to the boundaries instead of panicking. In other words, it sets to 0 when the input is <0 and to 180 when it is >180. This way, we are safe with rounding errors.
 
 Let's mount hip motors and see how this works in practice. The `ALLBOT` structure contains references to servo motors named by their placement in the robot's body. The `init` function sets all motors to 90 degrees. The `test` function animates the motors between 90 and 45 degrees with a given speed in milliseconds.
 
@@ -152,4 +158,4 @@ Now, we can copy the standard movements from the [original Arduino code](https:/
 
 ![Hello](/media/2020/allbot_rust_part4/hello.gif)
 
-[Here](https://github.com/petrohi/allbot/blob/1d2762d86d36af0b9ff98ec53f3c4f7077c9d747/src/main.rs) and [here](https://github.com/petrohi/allbot/blob/ee931ec0dc7699de22bb05adaccd359c47c87073/src/main.rs) is the source code correspondingly for hip and hip-and-knee tests. The [final source]() code randomly selects movements from the entire repertoire.
+[Here](https://github.com/petrohi/allbot/blob/f0f6974f6c12d6d6221d123c2b452b75cddc42f2/src/main.rs) and [here](https://github.com/petrohi/allbot/blob/f672bee89cd340bf9fd4dcd5042c80d5256e33e7/src/main.rs) is the source code correspondingly for hip and hip-and-knee tests. The [final source](https://github.com/petrohi/allbot/blob/7f2b5a70f8636d417844ac7944c076bf6d8755d7/src/main.rs) code uses another excellent library--[wyhash](https://docs.rs/wyhash)--to select movements from the entire repertoire randomly.
