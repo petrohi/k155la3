@@ -321,20 +321,24 @@ The final part of the project is this simple top-level module written in Verilog
 
 ## FPGA implementation
 
-![Cell schematic](/media/2020/gol_on_fpga/implementation.png)
+![FPGA implementation](/media/2020/gol_on_fpga/implementation.png)
 
-I used Xilinx Vivado to synthesize and place GoL design on [Xilinx Artix-7 XC7A35T-1CSG324](https://www.digikey.com/en/products/detail/xilinx-inc/XC7A35T-1CSG324C/5039490) part. This part has 20,800 LUTs, and as you can see, 64 by 48 GoL grid takes 90% of all available LUTs.
+I used Xilinx Vivado to synthesize and place GoL design on [Xilinx Artix-7 XC7A35T-1CSG324](https://www.digikey.com/en/products/detail/xilinx-inc/XC7A35T-1CSG324C/5039490) part. This part has 20,800 LUTs available for implementation, and as you can see, 64 by 48 GoL grid takes 90% of all available LUTs.
 
-![Cell schematic](/media/2020/gol_on_fpga/utilization.png)
+![FPGA utilization](/media/2020/gol_on_fpga/utilization.png)
 
-You may have noticed that VGA colors are 4-bit buses. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn them into RGB analog levels required by the VGA.
+Xilinx Vivado also reports the power consumption of our design.
 
-![Cell schematic](/media/2020/gol_on_fpga/vga.png)
+![60Hz power](/media/2020/gol_on_fpga/60hz_power.png)
+
+You may have noticed that each VGA color uses a 4-bit bus. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn it into analog levels required by the VGA.
+
+![Board](/media/2020/gol_on_fpga/vga.png)
 
 ## Seeing is believing
 
 ![P60 Glider Shuttle](/media/2020/gol_on_fpga/p60glidershuttle.gif)
 
-I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a significant fraction of this delay. As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. After about half an hour, Vivado produced an implementation. The hardware runs 64 by 48 GoL grid at 100 million generations per second, creating this strange image on the screen.
+I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a significant fraction of this delay. As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. After about half an hour, Vivado produced an implementation. The hardware runs 64 by 48 GoL grid at 100 million generations per second, creating this beautiful pattern on the screen.
 
 ![100MHz](/media/2020/gol_on_fpga/100mhz.png)
