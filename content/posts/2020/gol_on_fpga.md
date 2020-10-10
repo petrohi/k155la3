@@ -7,7 +7,7 @@ language: en
 slug: conways-game-of-life-on-fpga
 ---
 
-When learning a new programming language, I like to have a well defined but yet non-trivial problem to solve. Conway's Game of Life (GoL) fits this definition. It has enough depth to show tradeoffs between memory and computational complexity. So naturally, when I picked up Chisel hardware description language (HDL), I wanted to build Game of Life in FPGA. It turned out to be even more interesting than in pure software. This post will follow my journey from writing Chisel code to running GoL on Digilent Arty A7 connected to a VGA screen.
+When learning a new programming language, I like to have a well defined but yet non-trivial problem to solve. Conway's Game of Life (GoL) fits this definition. It has enough depth to show tradeoffs between memory and computational complexity. So naturally, when I picked up [Chisel](https://www.chisel-lang.org/) hardware description language (HDL), I wanted to build Game of Life in FPGA. It turned out to be even more interesting than in pure software. This post will follow my journey from writing Chisel code to running GoL on [Digilent Arty A7](https://store.digilentinc.com/arty-a7-artix-7-fpga-development-board-for-makers-and-hobbyists/) connected to a VGA screen.
 
 Chisel in a relatively new HDL originating from Berkeley and RISC V community. It uses the Scala programming language as a base and defines the HDL as a domain-specific language on top of it. In essence, Chisel is just a set of Scala libraries. This allows applying the full power of general-purpose programming language to produce higher-order hardware abstractions. This approach seems almost the opposite of how traditional HDLs, such as Verilog, evolved. Verilog started as being very limited to hardware description and later added general-purpose programming elements to create more complex components.
 
@@ -220,7 +220,7 @@ object Life extends App {
 }
 ```
 
-Chisel executes our Scala code to produce an internal RTL representation called FIRRTL and then transforms to Verilog. Given 64 by 48 grid, Chisel produces stunning 18K lines of Verilog!
+Chisel executes our Scala code to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transforms to Verilog. Given 64 by 48 grid, Chisel produces stunning 18K lines of Verilog!
 
 ## VGA
 
@@ -317,17 +317,17 @@ module vga_life(
 endmodule
 ```
 
-The final part of the project is this simple top-level module written in Verilog. It instantiates GridInit and generates the VGA signal for 1024 by 768 resolution. Each cell takes up a square of 16 by 16 pixels. Note that we clock the grid with the VGA vertical sync pulse. This clock makes sure we apply GoL rules once per screen refresh or at 60 frames per second. The VGA forming registers are clocked at much faster 65MHz required to produce individual pixels at our resolution.
+The final part of the project is this simple top-level module written in Verilog. It instantiates GridInit and generates the VGA ([XGA 1024x768](http://www.tinyvga.com/vga-timing/1024x768@60Hz)) signal. Each cell takes up a square of 16 by 16 pixels. Note that we clock the grid with the VGA vertical sync pulse. This clock makes sure we apply GoL rules once per screen refresh or at 60 frames per second. The VGA forming registers are clocked at much faster 65MHz required to produce individual pixels at our resolution.
 
 ## FPGA implementation
 
 ![Cell schematic](/media/2020/gol_on_fpga/implementation.png)
 
-I used Xilinx Vivado to synthesize and place GoL design on Xilinx Artix-7 xc7a35ticsg324-1L part. This part has 20,800 LUTs, and as you can see, 64 by 48 GoL grid takes 90% of all available LUTs.
+I used Xilinx Vivado to synthesize and place GoL design on [Xilinx Artix-7 XC7A35T-1CSG324](https://www.digikey.com/en/products/detail/xilinx-inc/XC7A35T-1CSG324C/5039490) part. This part has 20,800 LUTs, and as you can see, 64 by 48 GoL grid takes 90% of all available LUTs.
 
 ![Cell schematic](/media/2020/gol_on_fpga/utilization.png)
 
-You may have noticed that VGA colors are 4-bit buses. I used Digilents VGA Pmod to turn them into RBG analog levels required by the VGA.
+You may have noticed that VGA colors are 4-bit buses. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn them into RGB analog levels required by the VGA.
 
 ![Cell schematic](/media/2020/gol_on_fpga/vga.png)
 
@@ -336,6 +336,5 @@ You may have noticed that VGA colors are 4-bit buses. I used Digilents VGA Pmod 
 ![P60 Glider Shuttle](/media/2020/gol_on_fpga/p60glidershuttle.gif)
 
 I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a significant fraction of this delay. As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. After about half an hour, Vivado produced an implementation. The hardware runs 64 by 48 GoL grid at 100 million generations per second, creating this strange image on the screen.
-
 
 ![100MHz](/media/2020/gol_on_fpga/100mhz.png)
