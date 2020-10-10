@@ -220,7 +220,7 @@ object Life extends App {
 }
 ```
 
-Chisel executes our Scala code to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transforms to Verilog. Given 64 by 48 grid, Chisel produces stunning 18K lines of Verilog!
+Chisel executes our Scala code to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transforms to Verilog. Given 64 by 48 grid, Chisel produces stunning 144K lines of Verilog!
 
 ## VGA
 
