@@ -13,11 +13,7 @@ Chisel in a relatively new HDL originating from Berkeley and RISC V community. I
 
 ## Architecture
 
-The trivial approach for implementing the GoL in software is to iterate over every cell, thus has the time complexity of O(N). The less trivial implementations iterate over groups of cells by either employing more complex pattern matching or multiple hardware threads. The ratio between the size of the memory where we store the GoL state and the computation group's size determines the efficiency. The more balanced it is, the better we utilize the underlying machine. In general-purpose CPUs, this ratio is heavily skewed towards having fewer computation resources and more memory.
-
-In hardware, the trivial approach is to have a dedicated memory and computation unit for every cell. Such a unit contains both the state's memory and the circuit for the rules to compute the next state. Cell units are then placed on the grid and wired to connect each to its eight neighbors. On every clock cycle, the grid computes the next state for all cells at once. The time complexity of this operation is constant or O(1). Although the trivial approach quickly runs out of steam by hitting the limit of available hardware resources, we can maintain a much better ratio between the memory and compute than with software on a general-purpose CPU and thus achieve higher efficiency.
-
-I decided to take the trivial 1-1 compute-to-memory ratio approach and see how far I can get on an inexpensive FPGA.
+The trivial approach for implementing the GoL in software is to iterate over every cell. In hardware--on the contrary--the trivial approach is to have dedicated memory and compute unit for every cell. Cell units are then placed on the grid and wired to connect each to its eight neighbors. On every clock cycle, the grid computes the next state for all cells at once.
 
 ## Cell
 
@@ -54,9 +50,11 @@ class Cell extends Module {
 }
 ```
 
-The Cell module inputs are `enabled`, `writeEnabled`, `writeState`, and eight neighbors' states. When `enabled` is 1 the cell is either computing its next state at every clock cycle or, when `writeEnabled` is 1, writes `writeState` as a new state. `enabled` set to 0 when freezes the cell's state. The only module output is the current state.
+The Cell module inputs are `enabled`, `writeEnabled`, `writeState`, and eight neighbors' states. When `enabled` is 1 the cell is either computing its next state at every clock cycle or, when `writeEnabled` is 1, sets the level of `writeState` as a new state. When `enabled` is 0, the cell keeps its state unchanged. The only module output is the current state.
 
-The input/output bundle is followed by the state register with a clock and reset wired implicitly by Chisel. Next is a combinational circuit that computes the GoL rules having neighbors and the own current state bits as input and the new state as an output. The most interesting line is where we compute neighbors' count by generating a series of adders. Scala's `foldRight` allows expressing this series very succinctly, which shows a glimpse of Chisel's power. Here is the resulting schematic elaborated by Xilinx Vivado (it is clickable).
+The input/output bundle is followed by the state register with a clock and reset wired implicitly by Chisel. Next is a combinational circuit that computes the GoL rules having neighbors and the own current state bits as input and the new state as an output. 
+
+The most interesting line is one that generates a series of adders compute to compute neighbors' count. Scala's `foldRight` allows expressing this series very succinctly, which shows a glimpse of Chisel's power. Here is the resulting schematic elaborated by Xilinx Vivado (it is clickable).
 
 [![Cell schematic](/media/2020/gol_on_fpga/cell.png)](/media/2020/gol_on_fpga/cell.png)
 
@@ -136,9 +134,9 @@ class Grid(val rows: Int, val cols: Int) extends Module {
 }
 ```
 
-The Grid module integrates cells in a two-dimensional array. The number of rows and columns are the parameters of the grid. The input/output bundle allows for reading and writing cell states addressable by their row and column. The grid freezes the state of all cells when write-enabled to prevent them from applying rules while editing.
+The Grid module integrates cells in a two-dimensional array. The number of rows and columns are the parameters of the grid. The input/output bundle allows for reading and writing cell states addressable by their row and column.
 
-The last two `for` loops are particularly notable. They wire up cells' neighbor states while also wrapping the GoL universe at the edges to form a torus. This code is another excellent example of Chisel's expressiveness.
+The `for` loops at the end are particularly notable. They wire up cells' neighbor states while also wrapping the GoL universe at the edges to form a torus. This code is another excellent example of Chisel's expressiveness.
 
 ## GridInit
 
@@ -214,9 +212,11 @@ class GridInit(val rows: Int, val cols: Int, fileName: String) extends Module {
 
 ```
 
-Now that we have the grid, we need a way to initialize it with a pattern. The GridInit module initializes the desired GoL pattern by write-enabling the grid and setting row-column addresses. After the last cell is written, it starts running GoL. 
+The GridInit module initializes the grid with the desired GoL pattern by write-enabling the grid and setting row-column addresses. After the last cell is written, it starts running GoL. 
 
-Scala is showing its general-purpose language power by letting us parse the standard .cells format into a list of row-column addresses.
+The general-purpose language comes handy to read the file and parse the standard .cells format into a row-column address list.
+
+## Elaboration
 
 ```scala
 object Life extends App {
@@ -321,21 +321,21 @@ module vga_life(
 endmodule
 ```
 
-The final part of the project is this simple top-level module written in Verilog. It instantiates GridInit and generates the VGA ([XGA 1024x768](http://www.tinyvga.com/vga-timing/1024x768@60Hz)) signal. Each cell takes up a square of 16 by 16 pixels. Note that we clock the grid with the VGA vertical sync pulse. This clock makes sure we apply GoL rules once per screen refresh or at 60 frames per second. The VGA signal forming registers are clocked at much faster 65MHz to produce individual pixels.
+This simple top-level module written in Verilog ties it all together. It instantiates GridInit and the PLL to generate the clock required for [1024x768 @ 60Hz](http://www.tinyvga.com/vga-timing/1024x768@60Hz) mode. Each cell takes up a square of 16 by 16 pixels. The grid is clocked with the VGA vertical sync pulse to ensure we apply GoL rules once per screen refresh or at 60 frames per second. The VGA signal forming registers are clocked at much faster 65MHz to produce individual pixels.
 
 ## FPGA implementation
 
 ![FPGA implementation](/media/2020/gol_on_fpga/implementation.png)
 
-I used Xilinx Vivado to synthesize and place GoL design on [Xilinx Artix-7 XC7A35T-1CSG324](https://www.digikey.com/en/products/detail/xilinx-inc/XC7A35T-1CSG324C/5039490) part. This part has 20,800 LUTs available for implementation, and as you can see, 64 by 48 GoL grid takes 90% of all available LUTs.
+I used Vivado to synthesize and place GoL design on [Xilinx Artix-7 XC7A35T-1CSG324](https://www.digikey.com/en/products/detail/xilinx-inc/XC7A35T-1CSG324C/5039490) part. Vivado reports 20,800 LUTs available for implementation, and as you can see, 64 by 48 GoL grid takes 90% of all available LUTs.
 
 ![FPGA utilization](/media/2020/gol_on_fpga/utilization.png)
 
-Xilinx Vivado also estimates the power consumption of our design for a total of 0.381 Watts.
+Vivado also estimates the power consumption of our design for a total of 0.381 Watts.
 
 ![60Hz power](/media/2020/gol_on_fpga/60hz_power.png)
 
-You may have noticed that each VGA color uses a 4-bit bus, also known as RBG444 encoding. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn it into analog levels required by the VGA.
+You may have noticed that VGA colors are encoded with 4 bits, also known as RBG444 encoding. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn it into analog levels required by the VGA.
 
 ![Board](/media/2020/gol_on_fpga/vga.png)
 
@@ -343,12 +343,26 @@ You may have noticed that each VGA color uses a 4-bit bus, also known as RBG444 
 
 ![P60 Glider Shuttle](/media/2020/gol_on_fpga/p60glidershuttle.gif)
 
-I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a significant fraction of this delay.
+I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a meaningful fraction of this delay.
 
-As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. Surprisingly, the power only increased to 0.444 Watts.
+As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. When the grid runs at 100 million generations per second, the VGA obviously cannot keep up. Every frame includes pixels from over a million generations creating this beautiful pattern on the screen.
 
-![100MHz power](/media/2020/gol_on_fpga/100mhz_power.png)
+## Speed and energy
 
-When the grid runs at 100 million generations per second, the VGA obviously cannot keep up. Every frame includes pixels from over 1 million generations creating this beautiful pattern on the screen.
+In conclusion, I wanted to quantify two trivial implementations of GoL. One is running as a software program on modern desktop CPU, and another as implemented in hardware on inexpensive FPGA. First, I will compare the raw speed as latency to compute a new state for a single cell, and second, the estimated energy required for this. Both calculations are "back of the napkin" and can only be as precise as to get the feeling for an order of magnitude.
 
-![100MHz](/media/2020/gol_on_fpga/100mhz.png)
+My desktop computer has a six-core processor capable of bursting to 4GHz. This processor has an L1 cache with a 4-cycle latency. We will assume that the GoL universe is small enough to fit entirely into the L1 cache. Thus, the next state's computation will likely be dominated by L1 accesses to read the eight neighbors' states and read/write the state itself.
+
+t<sub>CPU cell</sub> = (4 * 10) * 250ps = 10ns
+
+With FPGA, we were able to compute the entire grid containing 3072 cells at 100MHz.
+
+t<sub>FPGA cell</sub> = 10ns / 3072 = 3.3ps
+
+When it comes to energy, my desktop processor has a TDP of 65 Watts. This means it dissipates 65 Joules every second. Let's assume we utilize all six cores to compute GoL.
+
+E<sub>CPU cell</sub> = (65J / 6) * 10ns = 108nJ
+
+When I changed the design to use a 100MHz clock for the FPGA grid, Vivado reported a modest power increase to 0.444 Watts.
+
+E<sub>FPGA cell</sub> = 0.444J * 3.3ps = 1.5pJ

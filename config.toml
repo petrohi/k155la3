@@ -32,3 +32,5 @@ title = "K155LA3"
   posts = "/:year/:month/:day/:slug/"
 [pygmentsOptions]
   linenos = false
+[markup.goldmark.renderer]
+  unsafe= true
