@@ -353,16 +353,16 @@ In conclusion, I wanted to quantify two trivial implementations of GoL. One is r
 
 My desktop computer has a six-core processor capable of bursting to 4GHz. This processor has an L1 cache with a 4-cycle latency. We will assume that the GoL universe is small enough to fit entirely into the L1 cache. Thus, the next state's computation will likely be dominated by L1 accesses to read the eight neighbors' states and read/write the state itself.
 
-t<sub>CPU cell</sub> = (4 * 10) * 250ps = 10ns
+*t<sub>CPU cell</sub> = (4 * 10) * 250ps = 10ns*
 
 With FPGA, we were able to compute the entire grid containing 3072 cells at 100MHz.
 
-t<sub>FPGA cell</sub> = 10ns / 3072 = 3.3ps
+*t<sub>FPGA cell</sub> = 10ns / 3072 = 3.3ps*
 
 When it comes to energy, my desktop processor has a TDP of 65 Watts. This means it dissipates 65 Joules every second. Let's assume we utilize all six cores to compute GoL.
 
-E<sub>CPU cell</sub> = (65J / 6) * 10ns = 108nJ
+*E<sub>CPU cell</sub> = (65J / 6) * 10ns = 108nJ*
 
 When I changed the design to use a 100MHz clock for the FPGA grid, Vivado reported a modest power increase to 0.444 Watts.
 
-E<sub>FPGA cell</sub> = 0.444J * 3.3ps = 1.5pJ
+*E<sub>FPGA cell</sub> = 0.444J * 3.3ps = 1.5pJ*
