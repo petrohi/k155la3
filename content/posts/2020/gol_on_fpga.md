@@ -7,13 +7,13 @@ language: en
 slug: conways-game-of-life-on-fpga
 ---
 
-When learning a new programming language, I like to have a well defined but yet non-trivial problem to solve. [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life#) (GoL) fits this definition. It has enough depth to show tradeoffs between memory and computational complexity. So naturally, when I picked up [Chisel](https://www.chisel-lang.org/) hardware description language (HDL), I wanted to build Game of Life in FPGA. It turned out to be even more interesting than in pure software. This post will follow my journey from writing Chisel code to running GoL on [Digilent Arty A7](https://store.digilentinc.com/arty-a7-artix-7-fpga-development-board-for-makers-and-hobbyists/) connected to a VGA screen.
+When learning a new programming language, I like having a well defined yet non-trivial problem to solve. [Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life#) (GoL) fits this definition. It has enough depth to uncover various tradeoffs. So naturally, when I picked up [Chisel](https://www.chisel-lang.org/) hardware description language (HDL), I wanted to build Game of Life in FPGA. It turned out to be a lot more interesting than in software. This post will follow my progress from writing Chisel and Verilog code to running GoL on [Digilent Arty A7](https://store.digilentinc.com/arty-a7-artix-7-fpga-development-board-for-makers-and-hobbyists/) and seeing live patterns on a VGA screen.
 
-Chisel in a relatively new HDL originating from Berkeley and RISC V community. It uses the Scala programming language as a base and defines the HDL as a domain-specific language on top of it. In essence, Chisel is just a set of Scala libraries. This allows applying the full power of general-purpose programming language to produce higher-order hardware abstractions. This approach seems almost the opposite of how traditional HDLs, such as Verilog, evolved. Verilog started as being very limited to hardware description and later added general-purpose programming elements to create more complex components.
+Chisel in a relatively new HDL originating from Berkeley and RISC V community. It uses the Scala programming language as a base and defines the HDL as a domain-specific language on top of it. In essence, Chisel is just a set of Scala libraries. This allows applying the full power of general-purpose programming language to produce higher-order hardware abstractions. This approach seems almost the opposite of how the traditional HDLs, such as Verilog, evolved. Verilog initially focused on describing the hardware--very close to what could be expressed by conventional schematic--and later added general-purpose programming elements to create more complex components.
 
 ## Architecture
 
-The trivial approach for implementing the GoL in software is to iterate over every cell, thus has the time complexity of O(N). There are less trivial implementations that iterate over groups of cells by either employing more complex pattern matching or multiple hardware threads. The ratio between the size of the memory where we store the GoL state and the computation group's size determines the efficiency. The more balanced it is, the better we utilize the underlying machine. In general-purpose CPUs, this ratio is heavily skewed towards having fewer computation resources and more memory.
+The trivial approach for implementing the GoL in software is to iterate over every cell, thus has the time complexity of O(N). The less trivial implementations iterate over groups of cells by either employing more complex pattern matching or multiple hardware threads. The ratio between the size of the memory where we store the GoL state and the computation group's size determines the efficiency. The more balanced it is, the better we utilize the underlying machine. In general-purpose CPUs, this ratio is heavily skewed towards having fewer computation resources and more memory.
 
 In hardware, the trivial approach is to have a dedicated memory and computation unit for every cell. Such a unit contains both the state's memory and the circuit for the rules to compute the next state. Cell units are then placed on the grid and wired to connect each to its eight neighbors. On every clock cycle, the grid computes the next state for all cells at once. The time complexity of this operation is constant or O(1). Although the trivial approach quickly runs out of steam by hitting the limit of available hardware resources, we can maintain a much better ratio between the memory and compute than with software on a general-purpose CPU and thus achieve higher efficiency.
 
@@ -136,7 +136,9 @@ class Grid(val rows: Int, val cols: Int) extends Module {
 }
 ```
 
-The Grid module integrates cells in a two-dimensional array. The number of rows and columns are the parameters of the grid. The input/output bundle allows for reading and writing cell states addressable by their row and column. The grid freezes the state of all cells when write-enabled to prevent them from applying rules while editing. The last `for` loop is particularly notable. It wires up cells' neighbor states while also wrapping the GoL universe at the edges to form a torus. This loop is another excellent example of Chisel's expressiveness.
+The Grid module integrates cells in a two-dimensional array. The number of rows and columns are the parameters of the grid. The input/output bundle allows for reading and writing cell states addressable by their row and column. The grid freezes the state of all cells when write-enabled to prevent them from applying rules while editing.
+
+The last two `for` loops are particularly notable. They wire up cells' neighbor states while also wrapping the GoL universe at the edges to form a torus. This code is another excellent example of Chisel's expressiveness.
 
 ## GridInit
 
@@ -212,7 +214,9 @@ class GridInit(val rows: Int, val cols: Int, fileName: String) extends Module {
 
 ```
 
-Now that we have the grid, we need a way to initialize it with a pattern. The GridInit module starts by writing the desired GoL pattern and, once finished, switches to running GoL rules. Scala is very helpful with parsing the standard .cells format common for sharing GoL patterns. Finally, GridInit has only the read path in its input/output bundle.
+Now that we have the grid, we need a way to initialize it with a pattern. The GridInit module initializes the desired GoL pattern by write-enabling the grid and setting row-column addresses. After the last cell is written, it starts running GoL. 
+
+Scala is showing its general-purpose language power by letting us parse the standard .cells format into a list of row-column addresses.
 
 ```scala
 object Life extends App {
@@ -220,7 +224,7 @@ object Life extends App {
 }
 ```
 
-Chisel executes our Scala code to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transforms to Verilog. Given 64 by 48 grid, Chisel produces stunning 144K lines of Verilog!
+When Scala executes our program, we instruct the Chisel elaboration engine to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transform this representation to Verilog source file. Given 64 by 48 grid, Chisel produces stunning 144K lines of Verilog!
 
 ## VGA
 
@@ -317,7 +321,7 @@ module vga_life(
 endmodule
 ```
 
-The final part of the project is this simple top-level module written in Verilog. It instantiates GridInit and generates the VGA ([XGA 1024x768](http://www.tinyvga.com/vga-timing/1024x768@60Hz)) signal. Each cell takes up a square of 16 by 16 pixels. Note that we clock the grid with the VGA vertical sync pulse. This clock makes sure we apply GoL rules once per screen refresh or at 60 frames per second. The VGA forming registers are clocked at much faster 65MHz required to produce individual pixels at our resolution.
+The final part of the project is this simple top-level module written in Verilog. It instantiates GridInit and generates the VGA ([XGA 1024x768](http://www.tinyvga.com/vga-timing/1024x768@60Hz)) signal. Each cell takes up a square of 16 by 16 pixels. Note that we clock the grid with the VGA vertical sync pulse. This clock makes sure we apply GoL rules once per screen refresh or at 60 frames per second. The VGA signal forming registers are clocked at much faster 65MHz to produce individual pixels.
 
 ## FPGA implementation
 
@@ -327,11 +331,11 @@ I used Xilinx Vivado to synthesize and place GoL design on [Xilinx Artix-7 XC7A3
 
 ![FPGA utilization](/media/2020/gol_on_fpga/utilization.png)
 
-Xilinx Vivado also reports the power consumption of our design.
+Xilinx Vivado also estimates the power consumption of our design for a total of 0.381 Watts.
 
 ![60Hz power](/media/2020/gol_on_fpga/60hz_power.png)
 
-You may have noticed that each VGA color uses a 4-bit bus. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn it into analog levels required by the VGA.
+You may have noticed that each VGA color uses a 4-bit bus, also known as RBG444 encoding. I used [Digilent's VGA Pmod](https://store.digilentinc.com/pmod-vga-video-graphics-array/) to turn it into analog levels required by the VGA.
 
 ![Board](/media/2020/gol_on_fpga/vga.png)
 
@@ -339,6 +343,12 @@ You may have noticed that each VGA color uses a 4-bit bus. I used [Digilent's VG
 
 ![P60 Glider Shuttle](/media/2020/gol_on_fpga/p60glidershuttle.gif)
 
-I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a significant fraction of this delay. As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. After about half an hour, Vivado produced an implementation. The hardware runs 64 by 48 GoL grid at 100 million generations per second, creating this beautiful pattern on the screen.
+I captured a slow-motion video to be able to see individual GoL generations. At 60 frames per second, it is dizzyingly fast. But more importantly, remember we set the grid's clock based on how quickly we can render the screen. The propagation delay in the circuit that computes GoL rules determines the true speed limit. This bottleneck poses a more complex problem for placing the cells in the FPGA topology since the length of wires that connect the cell to its neighbors accounts for a significant fraction of this delay.
+
+As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. Surprisingly, the power only increased to 0.444 Watts.
+
+![100MHz power](/media/2020/gol_on_fpga/100mhz_power.png)
+
+When the grid runs at 100 million generations per second, the VGA obviously cannot keep up. Every frame includes pixels from over 1 million generations creating this beautiful pattern on the screen.
 
 ![100MHz](/media/2020/gol_on_fpga/100mhz.png)
