@@ -357,11 +357,11 @@ My desktop computer has a six-core processor capable of bursting to 4GHz. This p
 
 *t<sub>CPU cell</sub> = (4 * 10) * 250ps = 10ns*
 
-With FPGA, we were able to compute the entire grid containing 3072 cells at 100MHz.
+The FPGA is capable of computing the entire grid containing 3072 cells at 100MHz.
 
 *t<sub>FPGA cell</sub> = 10ns / 3072 = 3.3ps*
 
-When it comes to energy, my desktop processor has a TDP of 65 Watts. This means it dissipates 65 Joules every second. Let's assume we utilize all six cores to compute GoL.
+When it comes to energy, my desktop processor has a [thermal design power](https://en.wikipedia.org/wiki/Thermal_design_power) of 65 Watts. This means it dissipates 65 Joules of energy every second. Let's assume we utilize all six cores to compute GoL.
 
 *E<sub>CPU cell</sub> = (65J / 6) * 10ns = 108nJ*
 
