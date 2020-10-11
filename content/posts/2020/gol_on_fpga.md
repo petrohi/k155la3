@@ -54,7 +54,7 @@ The Cell module inputs are `enabled`, `writeEnabled`, `writeState`, and eight ne
 
 The input/output bundle is followed by the state register with a clock and reset wired implicitly by Chisel. Next is a combinational circuit that computes the GoL rules having neighbors and the own current state bits as input and the new state as an output. 
 
-The most interesting line is one that generates a series of adders compute to compute neighbors' count. Scala's `foldRight` allows expressing this series very succinctly, which shows a glimpse of Chisel's power. Here is the resulting schematic elaborated by Xilinx Vivado (it is clickable).
+The most interesting line is one that generates a series of adders to compute neighbors' count. Scala's `foldRight` allows expressing this series very succinctly, which shows a glimpse of Chisel's power. Here is the resulting schematic elaborated by Xilinx Vivado (it is clickable).
 
 [![Cell schematic](/media/2020/gol_on_fpga/cell.png)](/media/2020/gol_on_fpga/cell.png)
 
@@ -224,7 +224,7 @@ object Life extends App {
 }
 ```
 
-When Scala executes our program, we instruct the Chisel elaboration engine to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transform this representation to Verilog source file. Given 64 by 48 grid, Chisel produces stunning 144K lines of Verilog!
+When Scala executes our program, we instruct the Chisel elaboration engine to produce an internal RTL representation called [FIRRTL](http://freechipsproject.github.io/firrtl/) and then transform it into the Verilog source file. Given 64 by 48 grid, Chisel produces stunning 144K lines of Verilog!
 
 ## VGA
 
@@ -347,11 +347,13 @@ I captured a slow-motion video to be able to see individual GoL generations. At 
 
 As an experiment, I set the grid's clock to the board's external oscillator that runs at 100MHz. When the grid runs at 100 million generations per second, the VGA obviously cannot keep up. Every frame includes pixels from over a million generations creating this beautiful pattern on the screen.
 
+![100MHz](/media/2020/gol_on_fpga/100mhz.png)
+
 ## Speed and energy
 
-In conclusion, I wanted to quantify two trivial implementations of GoL. One is running as a software program on modern desktop CPU, and another as implemented in hardware on inexpensive FPGA. First, I will compare the raw speed as latency to compute a new state for a single cell, and second, the estimated energy required for this. Both calculations are "back of the napkin" and can only be as precise as to get the feeling for an order of magnitude.
+In conclusion, I wanted to quantify two trivial implementations of GoL. One is running as a software program on modern desktop CPU, and another as implemented in hardware on inexpensive FPGA. First, I will compare the raw speed as latency to compute a new state for a single cell, and second, the estimated energy required for this. Both calculations are "back of the napkin" and only intended to get the feeling for an order of magnitude.
 
-My desktop computer has a six-core processor capable of bursting to 4GHz. This processor has an L1 cache with a 4-cycle latency. We will assume that the GoL universe is small enough to fit entirely into the L1 cache. Thus, the next state's computation will likely be dominated by L1 accesses to read the eight neighbors' states and read/write the state itself.
+My desktop computer has a six-core processor capable of bursting to 4GHz. This processor has an L1 cache with a 4-cycle latency. We will assume that the GoL universe is small enough to fit entirely in the L1 cache. Thus, the next state's computation will likely be dominated by L1 accesses to read the eight neighbors' states and read/write the state itself.
 
 *t<sub>CPU cell</sub> = (4 * 10) * 250ps = 10ns*
 
