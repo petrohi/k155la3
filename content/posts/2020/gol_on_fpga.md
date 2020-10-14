@@ -183,31 +183,31 @@ class GridInit(val rows: Int, val cols: Int, fileName: String) extends Module {
     pattern
   }
 
-  val life = Module(new Grid(rows, cols))
+  val grid = Module(new Grid(rows, cols))
   val counter = RegInit(0.U(8.W))
   val pattern = loadPattern(fileName)
 
   when (counter < pattern.length.U) {
-    life.io.writeEnable := true.B
-    life.io.writeState := true.B
-    life.io.writeRow := Mux1H(pattern.zipWithIndex.map {
+    grid.io.writeEnable := true.B
+    grid.io.writeState := true.B
+    grid.io.writeRow := Mux1H(pattern.zipWithIndex.map {
       case ((row, _), index) => (counter === index.U, row.U)
     })
-    life.io.writeCol := Mux1H(pattern.zipWithIndex.map {
+    grid.io.writeCol := Mux1H(pattern.zipWithIndex.map {
       case ((_, col), index) => (counter === index.U, col.U)
     })
 
     counter := counter + 1.U
   }.otherwise {
-    life.io.writeEnable := false.B
-    life.io.writeState := false.B
-    life.io.writeRow := 0.U
-    life.io.writeCol := 0.U
+    grid.io.writeEnable := false.B
+    grid.io.writeState := false.B
+    grid.io.writeRow := 0.U
+    grid.io.writeCol := 0.U
   }
 
-  life.io.readRow := io.readRow
-  life.io.readCol := io.readCol
-  io.readState := life.io.readState
+  grid.io.readRow := io.readRow
+  grid.io.readCol := io.readCol
+  io.readState := grid.io.readState
 }
 
 ```
