@@ -204,7 +204,7 @@ MAC efficiency (%):                              0.000
 
 Now it's time to put everything together on our development board. For this, we first need to set up the PYNQ environment. This process starts with downloading the [SD card image for our development board](http://www.pynq.io/board.html). There's the [detailed instruction](https://ultra96-pynq.readthedocs.io/en/latest/getting_started.html) for setting board connectivity on the PYNQ documentation website. You should be able to open Jupyter notebooks and run some examples.
 
-There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for Linux kernel CMA (Continous Memory Area) is 128MB. The CMA is used for all host-side memory with which the TCU will interact. This memory includes the instruction buffer, DRAM0, and DRAM1 pools. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions.
+There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for Linux kernel CMA (Contiguous Memory Allocator) area size is 128MB. The CMA is used for all host-side memory with which the TCU will interact. This memory includes the instruction buffer, DRAM0, and DRAM1 pools. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions.
 
 ```bash
 wget <TODO>/pynq/2.7/image.ub
