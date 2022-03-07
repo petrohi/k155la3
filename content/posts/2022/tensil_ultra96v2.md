@@ -210,6 +210,7 @@ There is one caveat that needs addressing once PYNQ is installed. On the default
 wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/pynq/2.7/ultra96v2/image.ub
 scp image.ub xilinx@192.168.3.1:
 ssh xilinx@192.168.3.1
+sudo cp /boot/image.ub /boot/image.ub.backup
 sudo cp image.ub /boot/
 rm image.ub
 logout
