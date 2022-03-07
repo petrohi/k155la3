@@ -204,7 +204,7 @@ MAC efficiency (%):                              0.000
 
 Now it's time to put everything together on our development board. For this, we first need to set up the PYNQ environment. This process starts with downloading the [SD card image for our development board](http://www.pynq.io/board.html). There's the [detailed instruction](https://ultra96-pynq.readthedocs.io/en/latest/getting_started.html) for setting board connectivity on the PYNQ documentation website. You should be able to open Jupyter notebooks and run some examples.
 
-There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for Linux kernel CMA (Contiguous Memory Allocator) area size is 128MB. The CMA is used for all host-side memory with which the TCU will interact. This memory includes the instruction buffer, DRAM0, and DRAM1 pools. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions.
+There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for Linux kernel [CMA (Contiguous Memory Allocator)](https://elinux.org/images/2/23/LinuxCMA-cewg43.pdf) area size is 128MB. The CMA is used for all host-side memory with which the TCU will interact. This memory includes the instruction buffer, DRAM0, and DRAM1 pools. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions.
 
 ```bash
 wget <TODO>/pynq/2.7/image.ub
@@ -223,7 +223,7 @@ scp -r tensil/drivers/tcu_pynq xilinx@192.168.3.1:
 
 We also need to `scp` the bitstream and compiler artifacts.
 
-TThe bitstream contains the FPGA configuration resulting from Vivado synthesis and implementation. PYNQ also needs hardware handoff that describes FPGA components accessible to the host, such as DMA. Place both files in `/home/xilinx` on the development board. Assuming you are in the Vivado project directory, run the following commands to copy files over.
+The bitstream contains the FPGA configuration resulting from Vivado synthesis and implementation. PYNQ also needs a hardware handoff file that describes FPGA components accessible to the host, such as DMA. Place both files in `/home/xilinx` on the development board. Assuming you are in the Vivado project directory, run the following commands to copy files over.
 
 ```bash
 scp tensil-ultra96v2.runs/impl_1/tensil_ultra96v2_wrapper.bit xilinx@192.168.3.1:tensil_ultra96v2.bit
@@ -238,7 +238,7 @@ Now copy `tmodel`, `tprog` and `tdata` aftifacts produced by the compiler in `/h
 scp resnet20v2_cifar_onnx_ultra96v2.t* xilinx@192.168.3.1:
 ```
 
-One more thing necessary to run ResNet model is CIFAR dataset. You can get it at Kaggle. Put these files in `/home/xilinx/cifar-10-batches-py/` on your development board.
+One more thing necessary to run ResNet model is CIFAR dataset. You can get it at [Kaggle](https://www.kaggle.com/janzenliu/cifar-10-batches-py). Put these files in `/home/xilinx/cifar-10-batches-py/` on your development board.
 
 We are finally ready to fire up Jupyter notebook and run ResNet model on TCU.
 
