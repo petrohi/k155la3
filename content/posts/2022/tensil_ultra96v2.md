@@ -207,7 +207,7 @@ Now it's time to put everything together on our development board. For this, we 
 There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for Linux kernel [CMA (Contiguous Memory Allocator)](https://elinux.org/images/2/23/LinuxCMA-cewg43.pdf) area size is 128MB. The CMA is used for all host-side memory with which the TCU will interact. This memory includes the instruction buffer, DRAM0, and DRAM1 pools. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions.
 
 ```bash
-wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/pynq/2.7/image.ub
+wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/pynq/2.7/ultra96v2/image.ub
 scp image.ub xilinx@192.168.3.1:
 ssh xilinx@192.168.3.1
 sudo cp image.ub /boot/
