@@ -213,7 +213,7 @@ ssh xilinx@192.168.3.1
 sudo cp /boot/image.ub /boot/image.ub.backup
 sudo cp image.ub /boot/
 rm image.ub
-logout
+sudo reboot
 ```
 
 Now that PYNQ is up and running, the next step is to `scp` Tensil PYNQ driver. Start by cloning the [Tensil GitHub repository](https://github.com/tensil-ai/tensil) and then copy `drivers/tcu_pynq` to `/home/xilinx/tcu_pynq` on your board.
