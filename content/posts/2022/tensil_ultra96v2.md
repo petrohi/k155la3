@@ -79,7 +79,7 @@ Now that we've selected our architecture, it's time to run the Tensil RTL genera
 To generate a design using our chosen architecture, run the following command inside the Tensil toolchain docker container:
 
 ```bash
-tensil rtl -a /demo/arch/ultra96v2.tarch -d 128
+tensil rtl -a /demo/arch/ultra96v2.tarch -s true -d 128
 ```
 
 Note the `-d 128` parameter, which specifies that the generated RTL will be compatible with 128-bit AXI interfaces supported by the ZU3EG part. This command will produce several Verilog files listed in the `ARTIFACTS` table printed out at the end. It also prints the `RTL SUMMARY` table with some of the essential parameters of the resulting RTL. We'll need to use the instruction size in bytes in the next step when designing in Vivado.

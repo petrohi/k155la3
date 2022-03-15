@@ -79,7 +79,7 @@ Now that we've selected our architecture, it's time to run the Tensil RTL genera
 To generate a design using our chosen architecture, run the following command inside the Tensil toolchain docker container:
 
 ```bash
-tensil rtl -a /demo/arch/pynqz1.tarch
+tensil rtl -a /demo/arch/pynqz1.tarch -s true
 ```
 
 This command will produce several Verilog files listed in the `ARTIFACTS` table printed out at the end. It also prints the `RTL SUMMARY` table with some of the essential parameters of the resulting RTL.
