@@ -359,7 +359,7 @@ show_img(data, n)
 
 You should see the image.
 
-![frog](/media/2022/tensil_pynqz1/horse.png)
+![horse](/media/2022/tensil_pynqz1/horse.png)
 
 Next, load the `tmodel` manifest for the model into the driver. The manifest tells the driver where to find the other two binary files (program and weights data).
 
