@@ -79,7 +79,7 @@ Now that we've selected our architecture, it's time to run the Tensil RTL genera
 To generate a design using our chosen architecture, run the following command inside the Tensil toolchain docker container:
 
 ```bash
-tensil rtl -a /demo/arch/ultra96v2.tarch -d 128
+tensil rtl -a /demo/arch/ultra96v2.tarch -s true -d 128
 ```
 
 Note the `-d 128` parameter, which specifies that the generated RTL will be compatible with 128-bit AXI interfaces supported by the ZU3EG part. This command will produce several Verilog files listed in the `ARTIFACTS` table printed out at the end. It also prints the `RTL SUMMARY` table with some of the essential parameters of the resulting RTL. We'll need to use the instruction size in bytes in the next step when designing in Vivado.
@@ -302,6 +302,29 @@ import matplotlib.pyplot as plt
 import pickle
 ```
 
+Now, initialize the PYNQ overlay from the bitstream and instantiate the Tensil driver using the TCU architecture and the overlay's DMA configuration. Note that we are passing `axi_dma_0` object from the overlay -- the name matches the DMA block in the Vivado design.
+
+```python
+overlay = Overlay('/home/xilinx/tensil_ultra96v2.bit')
+tcu = Driver(ultra96, overlay.axi_dma_0)
+```
+
+The Tensil PYNQ driver includes the Ultra96 architecture definition. Here it is in an excerpt from `architecture.py`: you can see that it matches the architecture we used previously.
+
+```python
+ultra96 = Architecture(
+    data_type=DataType.FP16BP8,
+    array_size=16,
+    dram0_depth=2097152,
+    dram1_depth=2097152,
+    local_depth=20480,
+    accumulator_depth=4096,
+    simd_registers_depth=1,
+    stride0_depth=8,
+    stride1_depth=8,
+)
+```
+
 Next, let's load CIFAR images from the `test_batch`.
 
 ```python
@@ -328,10 +351,9 @@ def show_img(data, n):
     plt.imshow(np.transpose(data[n].reshape((3, 32, 32)), axes=[1, 2, 0]))
 
 def get_img(data, n):
-    array_width = 16
     img = np.transpose(data_norm[n].reshape((3, 32, 32)), axes=[1, 2, 0])
-    img = np.pad(img, [(0, 0), (0, 0), (0, array_width - 3)], 'constant', constant_values=0)
-    return img.reshape((-1, array_width))
+    img = np.pad(img, [(0, 0), (0, 0), (0, tcu.arch.array_size - 3)], 'constant', constant_values=0)
+    return img.reshape((-1, tcu.arch.array_size))
 
 def get_label(labels, label_names, n):
     label_idx = labels[n]
@@ -352,40 +374,10 @@ You should see the image.
 
 ![frog](/media/2022/tensil_ultra96v2/frog.png)
 
-Then, specify the location of the bitstream and hardware handoff file.
-
-```python
-bitstream = '/home/xilinx/tensil_ultra96v2.bit'
-```
-
-Now, initialize the PYNQ overlay from the bitstream and instantiate the Tensil driver using the TCU architecture and the overlay's DMA configuration. Note that we are passing `axi_dma_0` object from the overlay -- the name matches the DMA block in the Vivado design.
-
-```python
-overlay = Overlay(bitstream)
-tcu = Driver(ultra96, overlay.axi_dma_0)
-```
-
-The Tensil PYNQ driver includes the Ultra96 architecture definition. Here it is in an excerpt from `architecture.py`: you can see that it matches the architecture we used previously.
-
-```python
-ultra96 = Architecture(
-    data_type=DataType.FP16BP8,
-    array_size=16,
-    dram0_depth=2097152,
-    dram1_depth=2097152,
-    local_depth=20480,
-    accumulator_depth=4096,
-    simd_registers_depth=1,
-    stride0_depth=8,
-    stride1_depth=8,
-)
-```
-
 Next, load the `tmodel` manifest for the model into the driver. The manifest tells the driver where to find the other two binary files (program and weights data).
 
 ```python
-resnet = '/home/xilinx/resnet20v2_cifar_onnx_ultra96v2.tmodel'
-tcu.load_model(resnet)
+tcu.load_model('/home/xilinx/resnet20v2_cifar_onnx_ultra96v2.tmodel')
 ```
 
 Finally, run the model and print the results! The call to `tcu.run(inputs)` is where the magic happens. We'll convert the ResNet classification result vector into CIFAR labels. Note that if you are using the ONNX model, the input and output are named `x:0` and `Identity:0` respectively. For the TensorFlow model they are named `x` and `Identity`.
