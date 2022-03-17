@@ -82,7 +82,7 @@ To generate a design using our chosen architecture, run the following command in
 tensil rtl -a /demo/arch/ultra96v2.tarch -s true -d 128
 ```
 
-Note the `-d 128` parameter, which specifies that the generated RTL will be compatible with 128-bit AXI interfaces supported by the ZU3EG part. This command will produce several Verilog files listed in the `ARTIFACTS` table printed out at the end. It also prints the `RTL SUMMARY` table with some of the essential parameters of the resulting RTL. We'll need to use the instruction size in bytes in the next step when designing in Vivado.
+Note the `-d 128` parameter, which specifies that the generated RTL will be compatible with 128-bit AXI interfaces supported by the ZU3EG part. This command will produce several Verilog files listed in the `ARTIFACTS` table printed out at the end. It also prints the `RTL SUMMARY` table with some of the essential parameters of the resulting RTL.
 
 ```
 -----------------------------------------------------------------------
@@ -145,13 +145,7 @@ Double-click it. Disable "Scatter Gather Engine" and "Write Channel". Change "Wi
 
 ![dma](/media/2022/tensil_ultra96v2/dma.png)
 
-Again, click the plus `+` button in the Block Diagram toolbar and select "AXI4-Stream Data Width Converter". A width converter is necessary because the Tensil architecture variants may have different instruction widths depending on memory sizes and strides.
-
-Double-click the width converter block and change "Master Interface TDATA Width" to 9 bytes as printed in the `RTL SUMMARY` we saw when running the Tensil RTL tool.
-
-![width_converter](/media/2022/tensil_ultra96v2/width_converter.png)
-
-Connect the `instruction` port on the Tensil `top` block to the `M_AXIS` port on the AXI4-Stream Data Width Converter. Then, connect `S_AXIS` on the AXI4-Stream Data Width Converter block to `M_AXIS_MM2S` on the AXI DMA block. Finally, connect `M_AXI_MM2S` on the AXI DMA block to `S_AXI_HP1_FPD` on Zynq.
+Connect the `instruction` port on the Tensil `top` block to `M_AXIS_MM2S` on the AXI DMA block. Then, connect `M_AXI_MM2S` on the AXI DMA block to `S_AXI_HP1_FPD` on Zynq.
 
 Once again, click the plus `+` button in the Block Diagram toolbar and select "AXI SmartConnect. The SmartConnect is necessary to expose DMA control registers to the Zynq CPU, which will enable software to control the DMA transactions. Double-click it and set "Number of Slave and Master Interfaces" to 1. 
 
