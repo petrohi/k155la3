@@ -87,14 +87,12 @@ MAC efficiency (%):                              0.000
 
 [Back to top](#overview)
 
-Now it's time to put everything together on our development board. For this, we first need to set up the PYNQ environment. This process starts with downloading the [SD card image for our development board](http://www.pynq.io/board.html). There's the [detailed instruction](https://ultra96-pynq.readthedocs.io/en/latest/getting_started.html) for setting board connectivity on the PYNQ documentation website. You should be able to open Jupyter notebooks and run some examples.
+Now it's time to put everything together on our development board. For this, we first need to set up the PYNQ environment. This process starts with downloading the [SD card image for our development board](http://www.pynq.io/board.html). There's the [detailed instruction](https://ultra96-pynq.readthedocs.io/en/latest/getting_started.html) for setting board connectivity on the PYNQ documentation website. You should be able to open Jupyter notebooks and run some examples. Note that you'll need wireless internet connectivity for your Ultra96 board in order to run some of the commands in this section.
 
-There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for the Linux kernel [CMA (Contiguous Memory Allocator)](https://elinux.org/images/2/23/LinuxCMA-cewg43.pdf) area size is 128MB. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions. To patch the kernel, run these commands:
+There is one caveat that needs addressing once PYNQ is installed. On the default PYNQ image, the setting for the Linux kernel [CMA (Contiguous Memory Allocator)](https://elinux.org/images/2/23/LinuxCMA-cewg43.pdf) area size is 128MB. Given our Tensil architecture, the default CMA size is too small. To address this, you'll need to download our patched kernel, copy it to `/boot`, and reboot your board. Note that the patched kernel is built for PYNQ 2.7 and will not work with other versions. To patch the kernel, run these commands on the development board:
 
 ```bash
 wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/pynq/2.7/ultra96v2/image.ub
-scp image.ub xilinx@192.168.3.1:
-ssh xilinx@192.168.3.1
 sudo cp /boot/image.ub /boot/image.ub.backup
 sudo cp image.ub /boot/
 rm image.ub
