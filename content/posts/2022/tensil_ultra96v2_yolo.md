@@ -200,6 +200,8 @@ displayport = DisplayPort()
 displayport.configure(VideoMode(frame_w, frame_h, 24), PIXEL_RGB)
 ```
 
+If you are connecting the board to an HDMI screen, make sure to use active DP-to-HDMI cable, such as [this one](https://www.amazon.com/gp/product/B01FM50QJC/).
+
 Next, load the `tmodel` manifest for the model into the driver. The manifest tells the driver where to find the other two binary files (program and weights data).
 
 ```python
