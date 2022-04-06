@@ -106,14 +106,16 @@ git clone git@github.com:tensil-ai/tensil.git
 scp -r tensil/drivers/tcu_pynq xilinx@192.168.3.1:
 ```
 
-Next, we'll download the tar file with the bitstream and hardware handoff file. The bitstream contains the FPGA configuration resulting from Vivado synthesis and implementation. PYNQ also needs a hardware handoff file that describes FPGA components accessible to the host, such as DMA. Un-tar both files in `/home/xilinx` on the development board. (If you'd like to explore using Tensil RTL tool and Xilinx Vivado to synthesize the bitstream yourself, we refer you to [sections 1 through 4 in the ResNet20 tutorial]({{< relref "/posts/2022/tensil_ultra96v2" >}}).)
+Next, we'll download the bitstream created for Ultra96 architecture definition we used with the compiler. The bitstream contains the FPGA configuration resulting from Vivado synthesis and implementation. PYNQ also needs a hardware handoff file that describes FPGA components accessible to the host, such as DMA. Download and un-tar both files in `/home/xilinx` by running these commands on the development board.
 
 ```bash
 wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/hardware/1.0.4/tensil_ultra96v2.tar.gz
 tar -xvf tensil_ultra96v2.tar.gz
 ```
 
-Now, copy the `.tmodel`, `.tprog` and `.tdata` artifacts produced by the compiler to `/home/xilinx` on the board.
+If you'd like to explore using Tensil RTL tool and Xilinx Vivado to synthesize the bitstream yourself, we refer you to [sections 1 through 4 in the ResNet20 tutorial]({{< relref "/posts/2022/tensil_ultra96v2" >}}). Section 6 in the same tutorial includes instructions for copying the bitstream and hardware handoff file from Vivado project onto your board.
+
+Now, copy the `.tmodel`, `.tprog` and `.tdata` artifacts produced by the compiler on your work station to `/home/xilinx` on the board.
 
 ```bash
 scp yolov4_tiny_192_onnx_ultra96v2.t* xilinx@192.168.3.1:
@@ -126,7 +128,7 @@ wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/tflite_runtime-2.8.0
 sudo pip install tflite_runtime-2.8.0-cp38-cp38-linux_aarch64.whl
 ```
 
-Finally, we will need the TF-Lite model to run the postprocessing in Yolo V4 Tiny and text labels for the COCO dataset. Download these files into `/home/xilinx` on the development board.
+Finally, we will need the TF-Lite model to run the postprocessing in Yolo V4 Tiny. We prepared this model for you as well. We'll also need text labels for the COCO dataset used for training the Yolo model. Download these files into `/home/xilinx` by running these commands on the development board.
 
 ```bash
 wget https://github.com/tensil-ai/tensil-models/raw/main/yolov4_tiny_192_post.tflite
@@ -135,9 +137,15 @@ wget https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-
 
 ## 4. Execute with PYNQ
 
-Now we will be tying everything together in PYNQ Jupyter notebook. Let's take a closer look at our processing pipeline. 
+Now, we will be tying everything together in PYNQ Jupyter notebook. Let's take a closer look at our processing pipeline. 
 
-First, we capture the frame image from the webcam. We adjust the image size, color scheme, floating-point channel representation, and Tensil vector alignment to match Yolo V4 Tiny input. Then, we run it through Tensil to get the results of the two final convolution layers. We subsequently run these results through the TF-Lite interpreter to get the model output for bounding boxes and classification scores. Then, we filter bounding boxes based on the score threshold and suppress overlapping boxes for the same detected object. Finally, we use the frame originally captured from the camera to plot bounding boxes, class names, scores (red), the current value for frames per second (green), and the detection area (blue). We send this annotated frame to Display Port to show on the screen.
+ - Capture the frame image from the webcam;
+ - Adjust the image size, color scheme, floating-point channel representation, and Tensil vector alignment to match Yolo V4 Tiny input;
+ - Run it through Tensil to get the results of the two final convolution layers;
+ - Subsequently run these results through the TF-Lite interpreter to get the model output for bounding boxes and classification scores;
+ - Filter bounding boxes based on the score threshold and suppress overlapping boxes for the same detected object;
+ - Use the frame originally captured from the camera to plot bounding boxes, class names, scores (red), the current value for frames per second (green), and the detection area (blue);
+ - Send this annotated frame to Display Port to show on the screen.
 
 At the beginning of the notebook, we define global parameters: frame dimensions for both camera and screen and Yolo V4 Tiny resolution we will be using.
 
@@ -169,7 +177,7 @@ from tcu_pynq.util import div_ceil
 from tcu_pynq.architecture import ultra96
 ```
 
-Now, initialize the PYNQ overlay from the bitstream and instantiate the Tensil driver using the TCU architecture and the overlay's DMA configuration. Note that we are passing axi_dma_0 object from the overlay – the name matches the DMA block in the Vivado design.
+Now, initialize the PYNQ overlay from the bitstream and instantiate the Tensil driver using the TCU architecture and the overlay's DMA configuration. Note that we are passing axi_dma_0 object from the overlay--the name matches the DMA block in the Vivado design.
 
 ```python
 overlay = Overlay('/home/xilinx/tensil_ultra96v2.bit')
@@ -281,7 +289,7 @@ def non_maximum_suppression(boxes, iou_threshold=0.4):
     return sorted(list(no_needs_merge) + list(merge(needs_merge)))
 ```
 
-Finally, we tie it all together in a loop to process a fixed number of frames. (You may replace it with `while(1):` to run the pipeline indefinitely.)
+Finally, we tie the pipeline together in a loop to process a fixed number of frames. (You may replace it with `while(1):` to run the pipeline indefinitely.)
 
 ```python
 for _ in range(600):
