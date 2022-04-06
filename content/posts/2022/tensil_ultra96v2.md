@@ -263,7 +263,7 @@ Now, copy the `.tmodel`, `.tprog` and `.tdata` artifacts produced by the compile
 scp resnet20v2_cifar_onnx_ultra96v2.t* xilinx@192.168.3.1:
 ```
 
-The last thing meeded to run our ResNet model is the CIFAR dataset. You can get it from [Kaggle](https://www.kaggle.com/janzenliu/cifar-10-batches-py) or run the commands below (since we only need the test batch, we remove the training batches to reduce the file size). Put these files in `/home/xilinx/cifar-10-batches-py/` on your development board.
+The last thing needed to run our ResNet model is the CIFAR dataset. You can get it from [Kaggle](https://www.kaggle.com/janzenliu/cifar-10-batches-py) or run the commands below (since we only need the test batch, we remove the training batches to reduce the file size). Put these files in `/home/xilinx/cifar-10-batches-py/` on your development board.
 
 ```bash
 wget http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
