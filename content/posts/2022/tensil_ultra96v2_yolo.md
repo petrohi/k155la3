@@ -1,5 +1,5 @@
 ---
-title: Tensil tutorial for Yolo V4 Tiny on Ultra96 V2
+title: Tensil tutorial for YOLO v4 Tiny on Ultra96 V2
 date: 2022-04-04T00:00:00
 categories: [projects, tensil, fpga]
 tags: [tensil, fpga, verilog, chisel]
@@ -9,7 +9,7 @@ slug: tensil-tutorial-for-yolo-v4-tiny-on-ultra96-v2
 
 ## Introduction
 
-This tutorial will use [Avnet Ultra96 V2](https://www.avnet.com/wps/portal/us/products/avnet-boards/avnet-board-families/ultra96-v2/) development board and [Tensil open-source inference accelerator](https://www.tensil.ai/) to show how to run [Yolo V4 Tiny](https://arxiv.org/pdf/2004.10934.pdf)--the state-of-the-art ML model for object detection--on FPGA. The Yolo model contains some operations that Tensil does not support. These operations are in the final stage of processing and are not compute-intensive. We will use [TensorFlow Lite](https://www.tensorflow.org/lite/) (TF-Lite) to run them on the CPU to work around this. We will use the [PYNQ framework](http://www.pynq.io) to receive real-time video from a USB webcam and show detected objects on a screen connected to Display Port. This tutorial refers to the [previous Ultra96 tutorial]({{< relref "/posts/2022/tensil_ultra96v2" >}}) for step-by-step instructions for generating Tensil RTL and getting [Xilinx Vivado](https://www.xilinx.com/products/design-tools/vivado.html) to synthesize the bitstream.
+This tutorial will use [Avnet Ultra96 V2](https://www.avnet.com/wps/portal/us/products/avnet-boards/avnet-board-families/ultra96-v2/) development board and [Tensil open-source inference accelerator](https://www.tensil.ai/) to show how to run [YOLO v4 Tiny](https://arxiv.org/pdf/2004.10934.pdf)--the state-of-the-art ML model for object detection--on FPGA. The YOLO model contains some operations that Tensil does not support. These operations are in the final stage of processing and are not compute-intensive. We will use [TensorFlow Lite](https://www.tensorflow.org/lite/) (TF-Lite) to run them on the CPU to work around this. We will use the [PYNQ framework](http://www.pynq.io) to receive real-time video from a USB webcam and show detected objects on a screen connected to Display Port. This tutorial refers to the [previous Ultra96 tutorial]({{< relref "/posts/2022/tensil_ultra96v2" >}}) for step-by-step instructions for generating Tensil RTL and getting [Xilinx Vivado](https://www.xilinx.com/products/design-tools/vivado.html) to synthesize the bitstream.
 
 If you get stuck or find an error, you can ask a question on our [Discord](https://discord.gg/TSw34H3PXr) or send an email to [support@tensil.ai](mailto:support@tensil.ai).
 
@@ -20,7 +20,7 @@ If you get stuck or find an error, you can ask a question on our [Discord](https
 Before we start, let's get a bird's eye view of what we want to accomplish. We'll follow these steps:
 
 1. [Generate and synthesize Tensil RTL](#1-generate-and-synthesize-tensil-rtl)
-2. [Compile Yolo V4 Tiny model for Tensil](#2-compile-yolo-v4-tiny-model-for-tensil)
+2. [Compile YOLO v4 Tiny model for Tensil](#2-compile-yolo-v4-tiny-model-for-tensil)
 3. [Prepare PYNQ and TF-Lite](#3-prepare-pynq-and-tf-lite)
 4. [Execute with PYNQ](#4-execute-with-pynq)
 
@@ -32,13 +32,13 @@ In the first step, we'll be getting Tensil tools to generate the RTL code and th
 
 Alternatively, you can skip this step and download the ready made bitstream. For this we include instructions in the subsequent section.
 
-## 2. Compile Yolo V4 Tiny model for Tensil
+## 2. Compile YOLO v4 Tiny model for Tensil
 
 [Back to top](#overview)
 
-Now, we need to compile the ML model to a Tensil binary consisting of TCU instructions executed by the TCU hardware directly. The Yolo V4 Tiny model is included in two resolutions, 192 and 416, in the Tensil docker image at `/demo/models/yolov4_tiny_192.onnx` and `/demo/models/yolov4_tiny_416.onnx`. The higher resolution will detect smaller objects using more computation and thus have fewer frames per second. Note that below we will be using 192 resolution, but simply replacing it with 416 should work as well.
+Now, we need to compile the ML model to a Tensil binary consisting of TCU instructions executed by the TCU hardware directly. The YOLO v4 Tiny model is included in two resolutions, 192 and 416, in the Tensil docker image at `/demo/models/yolov4_tiny_192.onnx` and `/demo/models/yolov4_tiny_416.onnx`. The higher resolution will detect smaller objects using more computation and thus have fewer frames per second. Note that below we will be using 192 resolution, but simply replacing it with 416 should work as well.
 
-As we mentioned in the introduction, we will be using the TF-Lite framework to run the postprocessing of Yolo V4 Tiny. Specifically, this postprocessing includes `Sigmoid` and `Exp` operations not supported by the Tensil hardware. (We plan to implement them using table lookup based on Taylor expansion.) This means that for Tensil we need to compile the model ending with the last convolution layers. Below these layers, we need to compile the TF-Lite model. To identify the output nodes for the Tensil compiler, take a look at the model in [Netron](https://netron.app/).
+As we mentioned in the introduction, we will be using the TF-Lite framework to run the postprocessing of YOLO v4 Tiny. Specifically, this postprocessing includes `Sigmoid` and `Exp` operations not supported by the Tensil hardware. (We plan to implement them using table lookup based on Taylor expansion.) This means that for Tensil we need to compile the model ending with the last convolution layers. Below these layers, we need to compile the TF-Lite model. To identify the output nodes for the Tensil compiler, take a look at the model in [Netron](https://netron.app/).
 
 ![yolo_heads](/media/2022/tensil_ultra96v2_yolo/yolo_heads.png)
 
@@ -128,7 +128,7 @@ wget https://s3.us-west-1.amazonaws.com/downloads.tensil.ai/tflite_runtime-2.8.0
 sudo pip install tflite_runtime-2.8.0-cp38-cp38-linux_aarch64.whl
 ```
 
-Finally, we will need the TF-Lite model to run the postprocessing in Yolo V4 Tiny. We prepared this model for you as well. We'll also need text labels for the COCO dataset used for training the Yolo model. Download these files into `/home/xilinx` by running these commands on the development board.
+Finally, we will need the TF-Lite model to run the postprocessing in YOLO v4 Tiny. We prepared this model for you as well. We'll also need text labels for the COCO dataset used for training the YOLO model. Download these files into `/home/xilinx` by running these commands on the development board.
 
 ```bash
 wget https://github.com/tensil-ai/tensil-models/raw/main/yolov4_tiny_192_post.tflite
@@ -140,14 +140,14 @@ wget https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-
 Now, we will be tying everything together in PYNQ Jupyter notebook. Let's take a closer look at our processing pipeline. 
 
  - Capture the frame image from the webcam;
- - Adjust the image size, color scheme, floating-point channel representation, and Tensil vector alignment to match Yolo V4 Tiny input;
+ - Adjust the image size, color scheme, floating-point channel representation, and Tensil vector alignment to match YOLO v4 Tiny input;
  - Run it through Tensil to get the results of the two final convolution layers;
  - Subsequently run these results through the TF-Lite interpreter to get the model output for bounding boxes and classification scores;
  - Filter bounding boxes based on the score threshold and suppress overlapping boxes for the same detected object;
  - Use the frame originally captured from the camera to plot bounding boxes, class names, scores (red), the current value for frames per second (green), and the detection area (blue);
  - Send this annotated frame to Display Port to show on the screen.
 
-At the beginning of the notebook, we define global parameters: frame dimensions for both camera and screen and Yolo V4 Tiny resolution we will be using.
+At the beginning of the notebook, we define global parameters: frame dimensions for both camera and screen and YOLO v4 Tiny resolution we will be using.
 
 ```python
 model_hw = 192
@@ -208,7 +208,7 @@ Next, load the `tmodel` manifest for the model into the driver. The manifest tel
 tcu.load_model('/home/xilinx/yolov4_tiny_{0}_onnx_ultra96v2.tmodel'.format(model_hw))
 ```
 
-Then, instantiate the TF-Lite interpreter based on Yolo postprocessing model.
+Then, instantiate the TF-Lite interpreter based on YOLO postprocessing model.
 
 ```python
 interpreter = tflite.Interpreter(model_path='/home/xilinx/yolov4_tiny_{0}_post.tflite'.format(model_hw))
@@ -373,6 +373,6 @@ Congratulations! You ran a state-of-the-art object detection ML model on a custo
 
 [Back to top](#overview)
 
-In this tutorial we used Tensil to show how to run Yolo V4 Tiny ML model on FPGA with a postprocessing step handled by TF-Lite. We showed how to analyze the model to detemine the layers at which to split the processing between TF-Lite and Tensil. We included step-by-step explanation how to do real-time video processing pipeline using PYNQ.
+In this tutorial we used Tensil to show how to run YOLO v4 Tiny ML model on FPGA with a postprocessing step handled by TF-Lite. We showed how to analyze the model to detemine the layers at which to split the processing between TF-Lite and Tensil. We included step-by-step explanation how to do real-time video processing pipeline using PYNQ.
 
 If you made it all the way through, big congrats! You're ready to take things to the next level by trying out your own model and architecture. Join us on [Discord](https://discord.gg/TSw34H3PXr) to say hello and ask questions, or send an email to [support@tensil.ai](mailto:support@tensil.ai).
