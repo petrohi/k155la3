@@ -145,7 +145,7 @@ Double-click it. Disable "Scatter Gather Engine" and "Write Channel". Change "Wi
 
 ![dma](/media/2022/tensil_ultra96v2/dma.png)
 
-Connect the `instruction` port on the Tensil `top` block to `M_AXIS_MM2S` on the AXI DMA block. Then, connect `M_AXI_MM2S` on the AXI DMA block to `S_AXI_HP1_FPD` on Zynq.
+Connect the `instruction` port on the Tensil `top` block to `M_AXIS_MM2S` on the AXI DMA block. Then, connect `M_AXI_MM2S` on the AXI DMA block to `S_AXI_HP3_FPD` on Zynq.
 
 Once again, click the plus `+` button in the Block Diagram toolbar and select "AXI SmartConnect. The SmartConnect is necessary to expose DMA control registers to the Zynq CPU, which will enable software to control the DMA transactions. Double-click it and set "Number of Slave and Master Interfaces" to 1. 
 
