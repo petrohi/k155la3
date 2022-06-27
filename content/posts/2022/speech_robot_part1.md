@@ -199,7 +199,7 @@ Once imported, right click on the `speech_robot` item in the Sources tab and the
 
 Once Vivado created the HDL wrapper the `speech_robot` item will get replaced with `speech_robot_wrapper`. Again, right click on it and then click Set as Top.
 
-You should now be able to see the entire Block Design.
+You should now be able to see the entire Block Design. (Image is clickable.)
 
 [![vivado_design_1](/media/2022/speech_robot_part1/vivado_design_1.png)](/media/2022/speech_robot_part1/vivado_design_1.png)
 
@@ -208,6 +208,14 @@ There are hierarchies (darker blue blocks) that correspond to our acceleration p
 Let’s peek into the STFT pipeline. You can see Hann window multiplication on the left, followed by the Xilinx FFT component in the middle, followed by the magnitude and fixed point conversion operations on the right.
 
 [![vivado_design_2](/media/2022/speech_robot_part1/vivado_design_2.png)](/media/2022/speech_robot_part1/vivado_design_2.png)
+
+Similarly for acquisition and exponent pipelines as well as the TCU.
+
+[![vivado_design_3](/media/2022/speech_robot_part1/vivado_design_3.png)](/media/2022/speech_robot_part1/vivado_design_3.png)
+
+[![vivado_design_4](/media/2022/speech_robot_part1/vivado_design_4.png)](/media/2022/speech_robot_part1/vivado_design_4.png)
+
+[![vivado_design_5](/media/2022/speech_robot_part1/vivado_design_5.png)](/media/2022/speech_robot_part1/vivado_design_5.png)
 
 Now it's time to synthesize the hardware. In the left-most pane click on Generate Bitstream, then click Yes and OK to launch the run. Now is a good time for a break!
 
