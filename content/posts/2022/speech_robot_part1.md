@@ -1,10 +1,10 @@
 ---
-title: Building speech controlled robot with Tensil and Arty A7
+title: Building speech controlled robot with Tensil and Arty A7 - Part I
 date: 2022-06-26T00:00:00
 categories: [projects, tensil, fpga]
 tags: [tensil, fpga, verilog, dsp]
 language: en
-slug: building-speech-controlled-robot-with-tensil-and-arty-a7
+slug: building-speech-controlled-robot-with-tensil-and-arty-a7-part1
 ---
 
 ## Introduction
