@@ -302,7 +302,7 @@ Plug the Arty board into USB on your computer and then click Open Target under O
 
 ![vivado_hardware](/media/2022/speech_robot_part1/vivado_hardware.png)
 
-Right-click on `xc7a100t _0 (1)` and then click Add Configuration Memory Device. Search for `s25fl128sxxxxxx0` and select the found part and click OK.
+Right-click on `xc7a100t_0` and then click Add Configuration Memory Device. Search for `s25fl128sxxxxxx0` and select the found part and click OK.
 
 If prompted to program the configuration memory device, click Cancel.
 
@@ -326,7 +326,7 @@ Plug the Arty board into USB on your computer and then click Open Target under O
 
 ![vivado_hardware](/media/2022/speech_robot_part1/vivado_hardware.png)
 
-If you skipped the previous section where we were creating the flash image BIN file you will need to add the configuration memory device in the Hardware Manager. To do this right-click on `xc7a100t _0 (1)` and then click Add Configuration Memory Device. Search for `s25fl128sxxxxxx0` and select the found part and click OK. If prompted to program the configuration memory device, click OK.
+If you skipped the previous section where we were creating the flash image BIN file you will need to add the configuration memory device in the Hardware Manager. To do this right-click on `xc7a100t_0` and then click Add Configuration Memory Device. Search for `s25fl128sxxxxxx0` and select the found part and click OK. If prompted to program the configuration memory device, click OK.
 
 Otherwise right-click on `s25fl128sxxxxxx0-spi-x1_x2_x4` and then click Program Configuration Memory Device. Enter the location of the flash image [BIN file](https://github.com/petrohi/speech-robot/blob/main/flash/speech_robot.bin).
 
