@@ -26,15 +26,11 @@ Before we start, let's get a bird's eye view of what we want to accomplish. We'l
 
 ## 1. Generate and synthesize Tensil RTL
 
-[Back to top](#overview)
-
 In the first step, we'll be getting Tensil tools to generate the RTL code and then using Xilinx Vivado to synthesize the bitstream for the Ultra96 board. Since this process is identical to other Ultra96 tutorials, we refer you to [sections 1 through 4 in the ResNet20 tutorial]({{< relref "/posts/2022/tensil_ultra96v2" >}}).
 
 Alternatively, you can skip this step and download the ready made bitstream. For this we include instructions in the subsequent section.
 
 ## 2. Compile YOLO v4 Tiny model for Tensil
-
-[Back to top](#overview)
 
 Now, we need to compile the ML model to a Tensil binary consisting of TCU instructions executed by the TCU hardware directly. The YOLO v4 Tiny model is included in two resolutions, 192 and 416, in the Tensil docker image at `/demo/models/yolov4_tiny_192.onnx` and `/demo/models/yolov4_tiny_416.onnx`. The higher resolution will detect smaller objects using more computation and thus have fewer frames per second. Note that below we will be using 192 resolution, but simply replacing it with 416 should work as well.
 
@@ -84,8 +80,6 @@ MAC efficiency (%):                              0.000
 ```
 
 ## 3. Prepare PYNQ and TF-Lite
-
-[Back to top](#overview)
 
 Now it's time to put everything together on our development board. For this, we first need to set up the PYNQ environment. This process starts with downloading the [SD card image for our development board](http://www.pynq.io/board.html). There's the [detailed instruction](https://ultra96-pynq.readthedocs.io/en/latest/getting_started.html) for setting board connectivity on the PYNQ documentation website. You should be able to open Jupyter notebooks and run some examples. Note that you'll need wireless internet connectivity for your Ultra96 board in order to run some of the commands in this section.
 
@@ -370,8 +364,6 @@ Congratulations! You ran a state-of-the-art object detection ML model on a custo
 
 
 ## Wrap-up
-
-[Back to top](#overview)
 
 In this tutorial we used Tensil to show how to run YOLO v4 Tiny ML model on FPGA with a postprocessing step handled by TF-Lite. We showed how to analyze the model to detemine the layers at which to split the processing between TF-Lite and Tensil. We included step-by-step explanation how to do real-time video processing pipeline using PYNQ.
 

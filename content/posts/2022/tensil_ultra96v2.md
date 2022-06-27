@@ -33,18 +33,14 @@ Before we start, let's look at the Tensil toolchain flow to get a bird's eye vie
 
 ## 1. Get Tensil
 
-[Back to top](#overview)
-
 First, we need to get the Tensil toolchain. The easiest way is to pull the Tensil docker container from Docker Hub. The following command will pull the image and then run the container.
 
 ```bash
 docker pull tensilai/tensil
-docker run -v $(pwd):/work -w /work -it tensilai/tensil bash
+docker run -u $(id -u ${USER}):$(id -g ${USER}) -v $(pwd):/work -w /work -it tensilai/tensil bash
 ```
 
 ## 2. Choose architecture
-
-[Back to top](#overview)
 
 Tensil's strength is customizability, making it suitable for a very wide range of applications. The Tensil architecture definition file (.tarch) specifies the parameters of the architecture to be implemented. These parameters are what make Tensil flexible enough to work for small embedded FPGAs as well as large data-center FPGAs. Our example will select parameters that provide the highest utilization of resources on the ZU3EG FPGA part at the core of the Ultra96 board. The container image conveniently includes the architecture file for the Ultra96 development board at `/demo/arch/ultra96v2.tarch`. Let's take a look at what's inside.
 
@@ -71,8 +67,6 @@ Next, we define the size of the `local` and `accumulator` memories which will be
 With `simd_registers_depth`, we specify the number of registers included in each SIMD ALU, which can perform SIMD operations on stored vectors used for ML operations like ReLU activation. Increasing this number is only needed rarely, to help compute special activation functions. Finally, `stride0_depth` and `stride1_depth` specify the number of bits to use for enabling "strided" memory reads and writes. It's unlikely you'll ever need to change this parameter.
 
 ## 3. Generate TCU accelerator design (RTL code)
-
-[Back to top](#overview)
 
 Now that we've selected our architecture, it's time to run the Tensil RTL generator. RTL stands for "Register Transfer Level" -- it's a type of code that specifies digital logic stuff like wires, registers and low-level logic. Special tools like Xilinx Vivado or [yosys](https://yosyshq.net/yosys/) can synthesize RTL for FPGAs and even ASICs.
 
@@ -104,8 +98,6 @@ Instruction size (bytes):                       9
 ```
 
 ## 4. Synthesize for Ultra96
-
-[Back to top](#overview)
 
 It is now time to start Xilinx Vivado. I will be using version 2021.2, which you can download free of charge (for prototyping) at the [Xilinx website](https://www.xilinx.com/support/download.html).
 
@@ -175,8 +167,6 @@ The second is timing, which tells us about how long it takes for signals to prop
 
 ## 5. Compile ML model for TCU
 
-[Back to top](#overview)
-
 The second branch of the Tensil toolchain flow is to compile the ML model to a Tensil binary consisting of TCU instructions, which are executed by the TCU hardware directly. For this tutorial, we will use ResNet20 trained on the CIFAR dataset. The model is included in the Tensil docker image at `/demo/models/resnet20v2_cifar.onnx`. From within the Tensil docker container, run the following command.
 
 ```bash
@@ -222,8 +212,6 @@ MAC efficiency (%):                              0.000
 ```
 
 ## 6. Execute using PYNQ
-
-[Back to top](#overview)
 
 Now it's time to put everything together on our development board. For this, we first need to set up the PYNQ environment. This process starts with downloading the [SD card image for our development board](http://www.pynq.io/board.html). There's the [detailed instruction](https://ultra96-pynq.readthedocs.io/en/latest/getting_started.html) for setting board connectivity on the PYNQ documentation website. You should be able to open Jupyter notebooks and run some examples.
 
@@ -412,8 +400,6 @@ Congratulations! You ran a machine learning model a custom ML accelerator that y
 
 
 ## Wrap-up
-
-[Back to top](#overview)
 
 In this tutorial we used Tensil to show how to run machine learning (ML) models on FPGA. We went through a number of steps to get here, including installing Tensil, choosing an architecture, generating an RTL design, synthesizing the desing, compiling the ML model and finally executing the model using PYNQ.
 
