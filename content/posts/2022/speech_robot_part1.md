@@ -209,11 +209,13 @@ Let’s peek into the STFT pipeline. You can see Hann window multiplication on t
 
 [![vivado_design_2](/media/2022/speech_robot_part1/vivado_design_2.png)](/media/2022/speech_robot_part1/vivado_design_2.png)
 
-Similarly for acquisition and exponent pipelines as well as the TCU.
+Similarly for acquisition and exponent pipelines.
 
 [![vivado_design_3](/media/2022/speech_robot_part1/vivado_design_3.png)](/media/2022/speech_robot_part1/vivado_design_3.png)
 
 [![vivado_design_4](/media/2022/speech_robot_part1/vivado_design_4.png)](/media/2022/speech_robot_part1/vivado_design_4.png)
+
+Design for the TCU hierarchy is very simple. We need an AXI DMA component to feed the program to the AXI4-Stream instruction port. DRAM0 and DRAM1 are full AXI ports and therefore go directly to the interconnect.
 
 [![vivado_design_5](/media/2022/speech_robot_part1/vivado_design_5.png)](/media/2022/speech_robot_part1/vivado_design_5.png)
 
