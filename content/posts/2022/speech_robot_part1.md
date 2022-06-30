@@ -20,7 +20,7 @@ Let’s start by specifying what commands we want the robot to understand. To ke
 
 ## System architecture
 
-Now that we know what robot we want to build, let's define its high-level system architecture. This architecture will revolve around the Arty board that will provide the “brains” for our robot. In order for the robot to “hear” we need a microphone. The Arty board provides native connectivity with the PMOD ecosystem and there is [MIC3 PMOD](https://digilent.com/shop/pmod-mic3-mems-microphone-with-adjustable-gain/) from Digilent that combines a microphone with ADCS7476 analog-to-digital converter. And in order to control motors we need two [HB3 PMOD](https://digilent.com/shop/pmod-hb3-h-bridge-driver-with-feedback-inputs/) drivers, also from Digilent, that will convert digital signals to voltage level and polarity to drive the motors.
+Now that we know what robot we want to build, let's define its high-level system architecture. This architecture will revolve around the Arty board that will provide the “brains” for our robot. In order for the robot to “hear” we need a microphone. The Arty board provides native connectivity with the PMOD ecosystem and there is [MIC3 PMOD](https://digilent.com/shop/pmod-mic3-mems-microphone-with-adjustable-gain/) from Digilent that combines a microphone with ADCS7476 analog-to-digital converter. And in order to control motors we need two [HB3 PMOD](https://digilent.com/shop/pmod-hb3-h-bridge-driver-with-feedback-inputs/) drivers, also from Digilent, that will convert digital signals to voltage level and polarity to drive the motors. (We also suggest purchasing a 12” or 18” [PMOD extender cable](https://digilent.com/shop/pmod-cable-kit-6-pin/) for MIC3 for best sound reception.)
 
 ![wiring](/media/2022/speech_robot_part1/wiring.svg)
 
@@ -107,7 +107,7 @@ As you can see the sensor pipeline consists of a number of distinct hardware com
 
 This pipeline also defines what is called a main loop in the embedded system. Unlike conventional software programs, embedded programs, once initialized, enter an infinite loop through which they continue to operate indefinitely. In our system this loop has a hard deadline. Once we receive a packet of samples from the acquisition pipeline we need to immediately request the next one. If not done quickly enough the acquisition hardware will drop samples and we will be getting a distorted waveform. In other words as we loop through acquisition of packets each iteration can only run for the time it takes to acquire the current packet. At 16 KHz and 128 samples per packet this is 8 ms.
 
-The STFT spectrogram and softmax exponent components are fast enough to take only a small fraction of 8ms iteration. Tensil inference is much more expensive and for the speech model it takes about 45ms (the TCU clocked at 50 MHz.) But the inference does not have to happen for every acquisition packet. It needs to have the entire spectrogram frame that is computed from 124 packets, which add up to 1 second! So, can the inference happen every second with plenty of time to spare? It turns out that if the model “looks” at consecutive spectrograms the interesting pattern can be right on the edge where both inferences will not recognize it. The solution is to run the inference on the sliding window over the spectrogram. This way if we track 4 overlapping windows over the spectrogram we can run inference every 250 ms and have plenty of opportunity to recognize interesting patterns!
+The STFT spectrogram and softmax exponent components are fast enough to take only a small fraction of 8ms iteration. Tensil inference is much more expensive and for the speech model it takes about 90ms (the TCU clocked at 25 MHz.) But the inference does not have to happen for every acquisition packet. It needs to have the entire spectrogram frame that is computed from 124 packets, which add up to 1 second! So, can the inference happen every second with plenty of time to spare? It turns out that if the model “looks” at consecutive spectrograms the interesting pattern can be right on the edge where both inferences will not recognize it. The solution is to run the inference on the sliding window over the spectrogram. This way if we track 4 overlapping windows over the spectrogram we can run inference every 250 ms and have plenty of opportunity to recognize interesting patterns!
 
 ![windows](/media/2022/speech_robot_part1/windows.svg)
 
@@ -177,7 +177,7 @@ On the next page, add Verilog files and the `hann_window.mem` file with ROM cont
 
 ![vivado_project_3](/media/2022/speech_robot_part1/vivado_project_3.png)
 
-Next, add the `Arty-A7-100-Master.xdc` constraint file. We use this constraint file to assign the pins of the FPGA chip to the upper part of the JB PMOD interface where we connect the MIC3 module.
+Next, add the `Arty-A7-100-Master.xdc` constraint file. We use this constraint file to assign the pins of the FPGA chip. The upper part of the JB PMOD interface is connected to the MIC3 module. The upper parts of the JA and JD PMOD interfaces are connected the left and right motor’s HB3 modules correspondingly.
 
 ![vivado_project_4](/media/2022/speech_robot_part1/vivado_project_4.png)
 
@@ -344,9 +344,41 @@ tio -b 115200 /dev/ttyUSB1
 
 Plug the Arty board back into USB and start shouting commands into your microphone!
 
-The firmware will continuously print the latest prediction starting with its probability. When probability is >0.9 it will add an arrow to highlight what would be an event.
+The firmware will continuously print the latest prediction starting with its probability. When the event is handled by the State Machine it will add an arrow to highlight this.
 
-![run](/media/2022/speech_robot_part1/run.png)
+```
+0.986799860 _unknown_
+0.598671191 _unknown_
+0.317275269 up
+0.884807667 _unknown_
+0.894345367 _unknown_
+0.660748154 go <<<
+0.924147147 _unknown_
+0.865093639 _unknown_
+0.725528655 _silence_
+0.959776973 _silence_
+0.999572298 _silence_
+0.993321552 _silence_
+0.814953217 _unknown_
+0.999999964 left <<<
+0.999999981 left
+0.999330031 _silence_
+0.957002786 _silence_
+0.704546136 _unknown_
+0.913633790 right <<<
+0.974430744 right
+0.995242088 right
+0.960198592 _silence_
+0.870040107 _silence_
+0.556416329 stop
+0.919281920 _silence_
+0.982788728 stop <<<
+0.999821720 _silence_
+0.913016908 _silence_
+0.797638716 _silence_
+0.610615039 _unknown_
+0.623989887 _unknown_
+```
 
 ## Conclusion
 
