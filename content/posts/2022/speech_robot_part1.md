@@ -11,7 +11,7 @@ slug: building-speech-controlled-robot-with-tensil-and-arty-a7-part1
 
 In this two-part tutorial we will learn how to build a speech controlled robot using [Tensil open source machine learning (ML) acceleration framework](https://www.tensil.ai/) and [Digilent Arty A7-100T FPGA board](https://digilent.com/shop/arty-a7-artix-7-fpga-development-board/). At the heart of this robot we will use the ML model for speech recognition. We will learn how Tensil framework enables ML inference to be tightly integrated with [digital signal processing](https://en.wikipedia.org/wiki/Digital_signal_processing) in a resource constrained environment of a mid-range Xilinx Artix-7 FPGA.
 
-Part I will focus on recognizing speech commands through a microphone. Part II will focus on translating commands into robot behavior and integrating with the mechanical platform.
+Part I will focus on recognizing speech commands through a microphone. [Part II]({{< relref "/posts/2022/speech_robot_part2" >}}) will focus on translating commands into robot behavior and integrating with the mechanical platform.
 
 Let’s start by specifying what commands we want the robot to understand. To keep the mechanical platform simple (and inexpensive) we will build on a wheeled chassis with two engines. The robot will recognize directives to move forward in a straight line (go!), turn in-place clockwise (right!) and counterclockwise (left!), and turn the engines off (stop!).
 
@@ -30,7 +30,7 @@ The first component continuously receives the microphone signal as an input and 
 
 ![components](/media/2022/speech_robot_part1/components.svg)
 
-In this part of the tutorial we will focus on building the sensor pipeline. In part II we will take on building the state machine plus assembling and wiring it all together.
+In this part of the tutorial we will focus on building the sensor pipeline. In [part II]({{< relref "/posts/2022/speech_robot_part2" >}}) we will take on building the state machine plus assembling and wiring it all together.
 
 Another important point of view for system architecture is separation between software and hardware. In the case of the Arty board the software will run on a [Xilinx Microblaze processor](https://www.xilinx.com/products/design-tools/microblaze.html)–which is itself implemented on top of FPGA fabric–a soft CPU. This means that we won’t have the computation power typically available in the hard CPU–the CPU implemented in silicon–and instead should rely on hardware acceleration whenever possible. This means that the CPU should only be responsible for orchestrating various hardware components to do the actual computation. The approach we will be taking is to keep software overhead to an absolute minimum by running a tiny embedded C program that will fit completely into 64K of static memory embedded into an FPGA (BRAM). This program will then use external DDR memory to organize communication between hardware accelerators using [Direct Memory Access](https://en.wikipedia.org/wiki/Direct_memory_access) (DMA).
 
@@ -384,4 +384,4 @@ The firmware will continuously print the latest prediction starting with its pro
 
 In the part I of this tutorial we learned how to design an FPGA-based sensor pipeline that combines machine learning and [digital signal processing](https://en.wikipedia.org/wiki/Digital_signal_processing) (DSP). We used [Tensil open source ML acceleration framework](https://www.tensil.ai/) for ML part of the workload and the multitude of standard Xilinx components to implement DSP acceleration. Throughout the tutorial we saw Tensil work well in a very constrained environment of the Microblaze embedded application. Tensil’s entire driver along with the actual application fit in 64 KB of local Microblaze memory. We also saw Tensil integrate seamlessly with the standard Xilinx components, such as [FFT](https://www.xilinx.com/content/dam/xilinx/support/documents/ip_documentation/xfft/v9_1/pg109-xfft.pdf), by using shared DDR memory, DMA and fixed point data type.
 
-In part II we will learn how to design the state machine component of the robot and how to interface with motor drivers. Then we will switch from bits to atoms and integrate the Arty board and PMOD modules with the chassis, motors and on-board power distribution.
+In [part II]({{< relref "/posts/2022/speech_robot_part2" >}}) we will learn how to design the state machine component of the robot and how to interface with motor drivers. Then we will switch from bits to atoms and integrate the Arty board and PMOD modules with the chassis, motors and on-board power distribution.

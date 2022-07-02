@@ -14,7 +14,7 @@ This is part II of a two-part tutorial in which we will continue to learn how to
 
 ## System architecture
 
-Let’s start by reviewing the system architecture we introduced in Part I. We introduced two high-level components: _Sensor Pipeline_ and _State Machine_. Sensor Pipeline continuously receives the microphone signal as an input and outputs events representing one of the four commands. State Machine receives a command event and changes its state accordingly. This state represents what the robot is currently doing and is used to control the engine.
+Let’s start by reviewing the system architecture we introduced in [Part I]({{< relref "/posts/2022/speech_robot_part1" >}}). We introduced two high-level components: _Sensor Pipeline_ and _State Machine_. Sensor Pipeline continuously receives the microphone signal as an input and outputs events representing one of the four commands. State Machine receives a command event and changes its state accordingly. This state represents what the robot is currently doing and is used to control the engine.
 
 ![components](/media/2022/speech_robot_part2/components.svg)
 
@@ -40,7 +40,7 @@ You can look at the State Machine implementation in the [speech robot source cod
 
 ## Motor control
 
-In order for the motors to turn, a difference in potential (voltage) must be applied to its M-(M1) and M+(M2) terminals. The strength and polarity of this voltage determines the speed and the direction of motion.
+In order for the motors to turn, a difference in potential (voltage) must be applied to its `M-`(`M1`) and `M+`(`M2`) terminals. The strength and polarity of this voltage determines the speed and the direction of motion.
 
 We use a [HB3 PMOD](https://digilent.com/shop/pmod-hb3-h-bridge-driver-with-feedback-inputs/) to control this voltage with digital signals.
 
