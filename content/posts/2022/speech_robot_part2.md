@@ -9,7 +9,7 @@ slug: building-speech-controlled-robot-with-tensil-and-arty-a7-part2
 
 ## Introduction
 
-This is part II of a two-part tutorial in which we will continue to learn how to build a speech controlled robot using [Tensil open source machine learning (ML) acceleration framework](https://www.tensil.ai/), [Digilent Arty A7-100T FPGA board](https://digilent.com/shop/arty-a7-artix-7-fpga-development-board/), and [Pololu Romi Chassis](https://www.pololu.com/category/202/romi-chassis-and-accessories). In part I we focused on recognizing speech commands through a microphone. Part II will focus on translating commands into robot behavior and integrating with the Romi chassis.
+This is part II of a two-part tutorial in which we will continue to learn how to build a speech controlled robot using [Tensil open source machine learning (ML) acceleration framework](https://www.tensil.ai/), [Digilent Arty A7-100T FPGA board](https://digilent.com/shop/arty-a7-artix-7-fpga-development-board/), and [Pololu Romi Chassis](https://www.pololu.com/category/202/romi-chassis-and-accessories). In [part I]({{< relref "/posts/2022/speech_robot_part1" >}}) we focused on recognizing speech commands through a microphone. Part II will focus on translating commands into robot behavior and integrating with the Romi chassis.
 
 <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/728669319?h=0367905789&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Speech robot demo"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
 <br>
