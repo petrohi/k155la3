@@ -95,6 +95,13 @@ At last, insert motors into the chassis and wire them to HB3 PMODs (connect `M-`
 
 If everything works, continue with the final assembly. Connect two extension plates with 2 screws and mount it on the chassis using 4 standoffs. Mount wheels and the ball caster. Place Arty A7 board and HB3 PMODs on top of the surface formed by two extension plates. You can use two-side adhesive to keep them in place. We suggest using an 18-gauge wire to raise the MIC3 PMOD above the chassis to avoid the microphone being influenced by the noise of motors.
 
+## Try it out!
+
+Turn on the power and then try saying “go!” to your robot. If all goes well, you should see results like in the following short video.
+
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/728669319?h=0367905789&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Speech robot demo"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<br>
+
 ## Conclusion
 
 In part II of the tutorial we learned how to design the State Machine for the speech robot and how to interface with motor drivers. We then integrated all of the parts on the [Pololu Romi](https://www.pololu.com/category/202/romi-chassis-and-accessories) chassis. Now that you have a functioning robot that obeys your commands, we invite you to extend it further and make use of the remaining 6 commands that our ML model can predict!
