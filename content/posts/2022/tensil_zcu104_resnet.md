@@ -31,7 +31,7 @@ Tensil tools are packaged in the form of Docker container, so you’ll need to h
 docker pull tensilai/tensil
 ```
 
-Use the following command to launch Tensil container.
+Next, use `docker run` command to launch Tensil container.
 
 ```bash
 docker run \
@@ -75,8 +75,25 @@ Next, click on _Generate Bitstream_ in the _Flow Navigator_ pane. Once bitstream
 
 You can skip the Vivado implementation and grab the baseline XSA file [here](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vivado/baseline/tensil_zcu104_wrapper.xsa).
 
-Another important result of running Vivado implementation is FPGA utilization. It is shown as one of the panes in the project summary once implementation is completed. The utilization is a direct function of our choice of [Tensil architecture](https://github.com/tensil-ai/tensil/blob/main/arch/zcu104.tarch). Specifying 32 by 32 systolic array size contributed to the high utilization of multiply-accumulate units (DSP). Note how we pushed Block RAM (BRAM) utilization almost to its limit by specifying 16 KV local memory and 4 KV accumulators (KV = 1024 vectors = 1024 * 32 * 16 bits). 
+Another important result of running Vivado implementation is FPGA utilization. It is shown as one of the panes in the project summary once implementation is completed. The utilization is a direct function of our choice of [Tensil architecture](https://github.com/tensil-ai/tensil/blob/main/arch/zcu104.tarch).
 
+```json
+{
+    "data_type": "FP16BP8",
+    "array_size": 32,
+    "dram0_depth": 2097152,
+    "dram1_depth": 2097152,
+    "local_depth": 16384,
+    "accumulator_depth": 4096,
+    "simd_registers_depth": 1,
+    "stride0_depth": 8,
+    "stride1_depth": 8,
+    "number_of_threads": 1,
+    "thread_queue_depth": 8
+}
+```
+
+Specifying 32 by 32 systolic array size contributed to the high utilization of multiply-accumulate units (DSP). Note how we pushed Block RAM (BRAM) utilization almost to its limit by specifying 16 KV local memory and 4 KV accumulators (KV = 1024 vectors = 1024 * 32 * 16 bits). 
 
 ![baseline_util](/media/2022/tensil_zcu104_resnet/baseline_util.png)
 
@@ -104,7 +121,7 @@ You can skip the model compilation step and use the [`sdcard` directory](https:/
 
 Launch Vitis IDE and create a new workspace for our project. Once greeted by the welcome screen click on _Create Application Project_. On the subsequent screen select _Create a new platform from hardware (XSA)_ and select the XSA file produced in the previous section. Name the application project `tensil_zcu104`. Keep default choices in the next few screens. On the last screen select _Empty Application (C)_.
 
-Now let’s make one important adjustment to the platform. Right-click on the `tensil_zcu104 [Application]` project in the _Assistant_ pane and select _Navigate to BSP settings_. You will see a tree containing `psu_cortex53_0` (the ARM cores we will be running on) containing `zynqmp_fsbl` (first stage bootloader) and `standalone_psu_cortex53_0` (our application) sub-branches. _Board Support Package_ under standalone should be selected.
+Now let’s make one important adjustment to the platform. Right-click on the `tensil_zcu104 [Application]` project in the _Assistant_ pane and select _Navigate to BSP settings_. You will see a tree containing `psu_cortex53_0` (the ARM cores we will be running on) with `zynqmp_fsbl` (first stage bootloader) and `standalone_psu_cortex53_0` (our application) subnodes. _Board Support Package_ under standalone should be selected.
 
 ![bsp](/media/2022/tensil_zcu104_resnet/bsp.png)
 
@@ -120,7 +137,7 @@ Click on _Configuration_ dropdown and choose _All configurations_. Then, under _
 
 ![m](/media/2022/tensil_zcu104_resnet/m.png)
 
-Now, let’s copy all necessary source files. For this you will need to clone the tutorial GitHub repository as well as the Tensil GitHub repository for the embedded driver sources. But first, let's copy architecture definitions for the embedded driver from the output artifacts of Tensil RTL tool.
+Now, let’s copy all necessary source files. For this you will need to clone the [tutorial GitHub repository](https://github.com/petrohi/tensil-zcu104-tutorial) as well as the [Tensil GitHub repository](https://github.com/tensil-ai/tensil) for the embedded driver sources. But first, let's copy architecture definitions for the embedded driver from the output artifacts of Tensil RTL tool.
 
 ```bash
 cp \
@@ -146,11 +163,17 @@ cp -r \
 
 Finally, let's build and run the application. First, make sure the ZCU104 board has boot DIP switches (SW6) all in ON position (towards the center of the board) to enable booting from JTAG. Then, right-click on the _Debug_ entry under the _tensil_zcu104 [Application]_ project in the _Assistant_ pane and select _Debug -> Launch Hardware_.
 
+Start the serial IO tool of your choice (like [tio](https://github.com/tio/tio)) and connect to `/dev/ttyUSB1` at 115200 baud. It could be a different device depending on what else is plugged into your computer. Look for a device name starting with Future Technology Devices International.
+
+```bash
+tio -b 115200 /dev/ttyUSB1
+```
+
 With the SD card inserted and containing the CIFAR-10 test data set and the ResNet model compiled for Tensil you should see the inference printing every 100’s image and the corresponding prediction along with measured inferences (frames) per second.
 
 ![truck](/media/2022/tensil_zcu104_resnet/truck.png)
 
-After running the inference on the entire test data set the program will print the final average frames per second and the accuracy of the inference. For the baseline solution we are getting an average of 133.54 frames per second with 90% accuracy. Note that the accuracy [we are seeing when testing](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/notebooks/resnet20v2_cifar.ipynb) the same ResNet model with TensorFlow is 92%. The 2% drop is due to changing the data type from 32-bit floating point in TensorFlow to 16-bit fixed point in Tensil.
+After running the inference on the entire test data set the program will print the final average frames per second and the accuracy of the inference. For the baseline solution we are getting an average of 133.54 frames per second with 90% accuracy. Note that the accuracy we are seeing when testing the same [ResNet model with TensorFlow](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/notebooks/resnet20v2_cifar.ipynb) is 92%. The 2% drop is due to changing the data type from 32-bit floating point in TensorFlow to 16-bit fixed point in Tensil.
 
 ## Dual clock solution
 
@@ -182,9 +205,25 @@ For the dual clock solution we are getting an average of 152.04 frames per secon
 
 ## Ultra RAM solution
 
-The second optimization is based on the higher-end ZYNQ UltraScale+ devices support for another type of on-chip memory called Ultra RAM. By default Vivado maps dual-port memory to Block RAM. In order for it to map to the Ultra RAM it needs hints in the Verilog code. The amount of Ultra-RAM available on ZCU104 allows us to add around 48 KV memory in addition to 20 KV available through Block RAM.
+The second optimization is based on the higher-end ZYNQ UltraScale+ devices support for another type of on-chip memory called Ultra RAM. By default, Vivado maps dual-port memory to Block RAM. In order for it to map to the Ultra RAM it needs hints in the Verilog code. To enable these hints we will use `--use-xilinx-ultra-ram` option of the Tensil RTL tool. The amount of Ultra RAM available on ZCU104 allows us to add around 48 KV memory in addition to 20 KV available through Block RAM.
 
 We start by creating a new [Tensil architecture](https://github.com/tensil-ai/tensil/blob/main/arch/zcu104_uram.tarch) for ZCU104 in which we allocate all of the Block RAM (20 KV) to accumulators and all of the Ultra RAM (48 KV) to local memory.
+
+```json
+{
+    "data_type": "FP16BP8",
+    "array_size": 32,
+    "dram0_depth": 2097152,
+    "dram1_depth": 2097152,
+    "local_depth": 49152,
+    "accumulator_depth": 20480,
+    "simd_registers_depth": 1,
+    "stride0_depth": 8,
+    "stride1_depth": 8,
+    "number_of_threads": 1,
+    "thread_queue_depth": 8
+}
+```
 
 Run the following command to generate Verilog artifacts.
 
@@ -199,7 +238,7 @@ tensil rtl \
 
 You can also skip running the Tensil RTL tool and grab the Ultra RAM Verilog artifacts [here](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/vivado/ultra_ram).
 
-Follow the [steps above](#tensil-rtl-and-vivado-implementation) to create a new Vivado project for Ultra RAM solution. We provide [scripted block design](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vivado/ultra_ram/tensil_zcu104.tcl), so that you won’t need to connect blocks manually. Following is how the Ultra RAM block design looks like. Note, that we based it on the dual clock design and the only difference is the Tensil RTL block name.
+Follow the [steps above](#tensil-rtl-and-vivado-implementation) to create a new Vivado project for Ultra RAM solution. We provide [scripted block design](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vivado/ultra_ram/tensil_zcu104.tcl), so that you won’t need to connect blocks manually. Following is how the Ultra RAM block design looks like. Note, that we based it on the dual clock design and the only difference is in the Tensil RTL block.
 
 [![ultra_ram_design](/media/2022/tensil_zcu104_resnet/ultra_ram_design.png)](/media/2022/tensil_zcu104_resnet/ultra_ram_design.png)
 
@@ -222,7 +261,7 @@ tensil compile \
 
 You can skip the model compilation step and use the [`sdcard` directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
 
-We again, suggest you create a new Vitis workspace for the Ultra RAM design and follow the [steps above](#tensil-for-vitis-embedded-applications) to get the inference running. Make sure to uncomment the correct `MODEL_FILE_PATH` definition for the newly created `*.tmodel` file.
+We again, suggest you create a new Vitis workspace for the Ultra RAM design and follow the [steps above](#tensil-for-vitis-embedded-applications) to get the inference running. Make sure to uncomment the correct `MODEL_FILE_PATH` [definition](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vitis/main.c#L18) for the newly created `*.tmodel` file.
 
 For the Ultra RAM solution we are getting an average of 170.16 frames per second, another meaningful improvement. This improvement is purely based on having larger on-chip memory. With a small on-chip memory the Tensil compiler is forced to partition ResNet convolution layers into multiple load-compute-save blocks. This, in turn, requires that the activations are loaded multiple times since weights are loaded only once. (This is called weight-stationery ordering. In the future we plan to add an option for input-stationery ordering.)
 
@@ -236,9 +275,9 @@ Having larger on-chip memory reduces this partitioning and, by extension, the ne
 
 ## Solutions with large local memory
 
-The final optimization is based on the hardware design and Tensil architecture definition we created to support the Ultra RAM. We will only change the Tensil compiler strategy.
+The final optimization is based on the same hardware design and Tensil architecture definition we created to support the Ultra RAM. We will only change the Tensil compiler strategy.
 
-As we mentioned previously, the Tensil compiler, by default, assumes that model layers will be much larger in terms of its weights and activations size than the local memory available on the FPGA. This is definitely true for large models and for low-end FPGA devices. For small and medium size models running on large FPGA devices there is a distinct possibility that local memory is large enough to contain the entire weights for each layer as well as activations for each pair of the previous and the next layer in the model. To see if this strategy is worth trying we first look at the output of Tensil compiler for the ZCU104 architecture with the Ultra RAM.
+As we mentioned previously, the Tensil compiler, by default, assumes that model layers will be much larger in terms of its weights and activations size than the local memory available on the FPGA. This is definitely true for large models and for low-end FPGA devices. For small and medium sized models running on large FPGA devices there is a distinct possibility that local memory is large enough to contain the entire weights for each layer as well as activations for each pair of previous-next layers in the model. To see if this strategy is worth trying, we first look at the output of Tensil compiler for the ZCU104 architecture with the Ultra RAM.
 
 ![compiler_summary](/media/2022/tensil_zcu104_resnet/compiler_summary.svg)
 
@@ -262,15 +301,15 @@ tensil compile \
     -t sdcard/ultra_ram_local_vars/
 ```
 
-You can skip all of the model compilation steps in the section and use the [`sdcard` directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
+You can skip all of the model compilation steps in this section and use the [`sdcard` directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
 
-This time, you can reuse the Vitis workspace for Ultra RAM solution and simply uncomment the correct `MODEL_FILE_PATH` definition for the newly created `*.tmodel` file.
+This time, you can reuse the Vitis workspace for the Ultra RAM solution and simply uncomment the correct `MODEL_FILE_PATH` [definition](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vitis/main.c#L18) for each newly created `*.tmodel` file.
 
 With the `local-vars` strategy we are getting an average of 214.66 frames per second.
 
 Now that we have seen the improvement allowed by large on-chip memory, let’s see if any other load and save operations can be avoided. With `local-vars` strategy we load model input image and weights and then save its output predictions. What if there would be enough on-chip memory to keep weights loaded? There is a strategy for this!
 
-With the `local-consts` strategy the inference expects all of the model weights to be preloaded to the local memory before the inference. This is the job of the driver. If it loads the model compiled with `local-consts` strategy it also preloads its weights from `*.tdata` file into Tensil local memory. The following diagram shows this strategy.
+With the `local-consts` strategy the inference expects all of the model weights to be preloaded to the local memory before the inference. This is the job of the driver. If it loads the model compiled with `local-consts` strategy it preloads its weights from `*.tdata` file into Tensil local memory. The following diagram shows this strategy.
 
 ![shared_local_consts](/media/2022/tensil_zcu104_resnet/shared_local_consts.svg)
 
@@ -306,8 +345,8 @@ With the `local-vars-and-consts` strategy we are getting an average of 293.58 fr
 
 # Conclusion
 
-In this tutorial we demonstrated how improvements in Vivado hardware design, leveraging Xilinx Ultra RAM with corresponding changes in Tensil architecture, and advanced strategies in Tensil compiler can improve the performance of inference for the ResNet20 model running on the ZCU104 board.
+In this tutorial we demonstrated how improvements in Vivado hardware design, leveraging Xilinx Ultra RAM, and advanced strategies in Tensil compiler can improve the performance of inference for the ResNet20 model running on the ZCU104 board.
 
-The following chart summarizes presented solutions and their frame per second performance.
+The following chart summarizes presented solutions and their frames per second performance.
 
 ![fps](/media/2022/tensil_zcu104_resnet/fps.svg)
