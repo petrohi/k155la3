@@ -43,7 +43,11 @@ Two last convolution operation have outputs named `model/conv2d_17/BiasAdd:0` an
 From within the Tensil docker container, run the following command.
 
 ```bash
-tensil compile -a /demo/arch/ultra96v2.tarch -m /demo/models/yolov4_tiny_192.onnx -o "model/conv2d_17/BiasAdd:0,model/conv2d_20/BiasAdd:0" -s true
+tensil compile \
+    -a /demo/arch/ultra96v2.tarch \
+    -m /demo/models/yolov4_tiny_192.onnx \
+    -o "model/conv2d_17/BiasAdd:0,model/conv2d_20/BiasAdd:0" \
+    -s true
 ```
 
 The resulting compiled files are listed in the `ARTIFACTS` table. The manifest (`tmodel`) is a plain text JSON description of the compiled model. The Tensil program (`tprog`) and weights data (`tdata`) are both binaries to be used by the TCU during execution. The Tensil compiler also prints a `COMPILER SUMMARY` table with interesting stats for both the TCU architecture and the model.
