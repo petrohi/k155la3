@@ -277,7 +277,9 @@ Having larger on-chip memory reduces this partitioning and, by extension, the ne
 
 The final optimization is based on the same hardware design and Tensil architecture definition we created to support the Ultra RAM. We will only change the Tensil compiler strategy.
 
-As we mentioned previously, the Tensil compiler, by default, assumes that model layers will be much larger in terms of its weights and activations size than the local memory available on the FPGA. This is definitely true for large models and for low-end FPGA devices. For small and medium sized models running on large FPGA devices there is a distinct possibility that local memory is large enough to contain the entire weights for each layer as well as activations for each pair of previous-next layers in the model. To see if this strategy is worth trying, we first look at the output of Tensil compiler for the ZCU104 architecture with the Ultra RAM.
+As we mentioned previously, the Tensil compiler, by default, assumes that model layers will be much larger in terms of its weights and activations size than the local memory available on the FPGA. This is definitely true for large models and for low-end FPGA devices. For small and medium sized models running on large FPGA devices there is a distinct possibility that local memory is large enough to contain the entire weights for each layer plus activations for the current and the previous layer in the model.
+
+To see if this strategy is worth trying, we first look at the output of Tensil compiler for the ZCU104 architecture with the Ultra RAM.
 
 ![compiler_summary](/media/2022/tensil_zcu104_resnet/compiler_summary.svg)
 
