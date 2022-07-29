@@ -129,19 +129,24 @@ We’ve already mentioned the [Jupyter notebook](https://github.com/petrohi/spee
 
 Next step is to produce the Register Transfer Level (RTL) representation of Tensil processor–the TCU. Tensil tools are packaged in the form of Docker container, so you’ll need to have Docker installed and then pull [Tensil Docker image](https://hub.docker.com/r/tensilai/tensil) by running the following command.
 
-```
+```bash
 docker pull tensilai/tensil
 ```
 
 Launch Tensil container in the directory containing our speech robot [GitHub repository](https://github.com/petrohi/speech-robot) by running.
 
-```
-docker run -u $(id -u ${USER}):$(id -g ${USER}) -v $(pwd):/work -w /work -it tensilai/tensil bash
+```bash
+docker run \
+    -u $(id -u ${USER}):$(id -g ${USER}) \
+    -v $(pwd):/work \
+    -w /work \
+    -it tensilai/tensil \
+    bash
 ```
 
 Now we can generate RTL Verilog files by running the following command. Note that we use `-a` argument to point to Tensil architecture definition, `-d` argument to request TCU to have 128-bit AXI4 interfaces, and `-t` to specify the target directory.
 
-```
+```bash
 tensil rtl -a ./arch/speech_robot.tarch -d 128 -t vivado
 ```
 
@@ -151,8 +156,12 @@ All [4 files](https://github.com/petrohi/speech-robot/tree/main/vivado) are alre
 
 The final step in this section is to compile the ML model to produce the artifacts that TCU will use to run it. This is accomplished by running the following command. Again we use `-a` argument to point to Tensil architecture definition. We then use `-m` argument to point to speech commands model ONNX file, `-o` to specify the name of the output node in the ONNX graph (you can inspect this graph by opening the ONNX file in the [Netron](https://netron.app/)), and `-t` to specify the target directory.
 
-```
-tensil compile -a ./arch/speech_robot.tarch -m ./model/speech_commands.onnx -o "dense_1" -t model
+```bash
+tensil compile \
+    -a ./arch/speech_robot.tarch \
+    -m ./model/speech_commands.onnx \
+    -o "dense_1" \
+    -t model
 ```
 
 The compiler will produce program and data binaries (.tprog and .tdata files) along with the model description (.tmodel file). First two will be used in the step where we build a flash image file. Model description will provide us with important values to initialize the TCU in the embedded application.
@@ -261,7 +270,7 @@ The second is the system project `speech_robot_system`. The system project expos
 
 Let’s start by copying the source code for speech robot from its GitHub repository. The following commands assume that this repository and the Vitis workspace are on the same level in the file system.
 
-```
+```bash
 cp speech-robot/vitis/speech_robot.c speech-robot-firmware/speech_robot/src/
 cp speech-robot/vitis/lscript.ld speech-robot-firmware/speech_robot/src/
 cp speech-robot/vivado/architecture_params.h speech-robot-firmware/speech_robot/src/
@@ -269,14 +278,14 @@ cp speech-robot/vivado/architecture_params.h speech-robot-firmware/speech_robot/
 
 Next we need to clone Tensil repository and copy the embedded driver source code.
 
-```
+```bash
 git clone [https://github.com/tensil-ai/tensil](https://github.com/tensil-ai/tensil)
 cp -r tensil/drivers/embedded/tensil/ speech-robot-firmware/speech_robot/src/
 ```
 
 Finally we copy one last file from the speech robot GitHub repository that will override the default Tensil platform definition.
 
-```
+```bash
 cp speech-robot/vitis/tensil/platform.h speech-robot-firmware/speech_robot/src/tensil/
 ```
 
@@ -338,7 +347,7 @@ Now make sure to close Vivado Hardware Manager, otherwise it will interfere with
 
 Start the serial IO tool of your choice (like [tio](https://github.com/tio/tio)) and connect to `/dev/ttyUSB1` at 115200 baud. It could be a different device depending on what else is plugged into your computer. Look for a device name starting with Future Technology Devices International.
 
-```
+```bash
 tio -b 115200 /dev/ttyUSB1
 ```
 

@@ -37,7 +37,12 @@ First, we need to get the Tensil toolchain. The easiest way is to pull the Tensi
 
 ```bash
 docker pull tensilai/tensil
-docker run -u $(id -u ${USER}):$(id -g ${USER}) -v $(pwd):/work -w /work -it tensilai/tensil bash
+docker run \
+    -u $(id -u ${USER}):$(id -g ${USER}) \
+    -v $(pwd):/work \
+    -w /work \
+    -it tensilai/tensil \
+    bash
 ```
 
 ## 2. Choose architecture
@@ -174,12 +179,20 @@ The second is timing, which tells us about how long it takes for signals to prop
 The second branch of the Tensil toolchain flow is to compile the ML model to a Tensil binary consisting of TCU instructions, which are executed by the TCU hardware directly. For this tutorial, we will use ResNet20 trained on the CIFAR dataset. The model is included in the Tensil docker image at `/demo/models/resnet20v2_cifar.onnx`. From within the Tensil docker container, run the following command.
 
 ```bash
-tensil compile -a /demo/arch/pynqz1.tarch -m /demo/models/resnet20v2_cifar.onnx -o "Identity:0" -s true
+tensil compile \
+    -a /demo/arch/pynqz1.tarch \
+    -m /demo/models/resnet20v2_cifar.onnx \
+    -o "Identity:0" \
+    -s true
 ```
 We're using the ONNX version of the model, but the Tensil compiler also supports TensorFlow, which you can try by compiling the same model in TensorFlow frozen graph form at `/demo/models/resnet20v2_cifar.pb`. 
 
 ```bash
-tensil compile -a /demo/arch/pynqz1.tarch -m /demo/models/resnet20v2_cifar.pb -o "Identity" -s true
+tensil compile \
+    -a /demo/arch/pynqz1.tarch \
+    -m /demo/models/resnet20v2_cifar.pb \
+    -o "Identity" \
+    -s true
 ```
 
 The resulting compiled files are listed in the `ARTIFACTS` table. The manifest (`tmodel`) is a plain text JSON description of the compiled model. The Tensil program (`tprog`) and weights data (`tdata`) are both binaries to be used by the TCU during execution. The Tensil compiler also prints a `COMPILER SUMMARY` table with interesting stats for both the TCU architecture and the model.

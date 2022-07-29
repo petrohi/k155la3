@@ -27,13 +27,13 @@ We will be using Vivado 2021.1, which you can [download](https://www.xilinx.com/
 
 Tensil tools are packaged in the form of Docker container, so you’ll need to have Docker installed and then pull [Tensil Docker image](https://hub.docker.com/r/tensilai/tensil) by running the following command.
 
-```
+```bash
 docker pull tensilai/tensil
 ```
 
 Use the following command to launch Tensil container.
 
-```
+```bash
 docker run \
     -u $(id -u ${USER}):$(id -g ${USER}) \
     -v $(pwd):/work \
@@ -54,7 +54,7 @@ We start with the baseline solution, in which we will create a working Tensil ap
 
 Let’s start with generating Tensil RTL. Run the following command to generate Verilog artifacts.
 
-```
+```bash
 tensil rtl -a /demo/arch/zcu104.tarch -d 128 -s true -t vivado/baseline
 ```
 
@@ -86,7 +86,7 @@ The ZCU104 board supports an SD card interface. This allows us to use Tensil emb
 
 Let’s start with compiling the ResNet ONNX file to Tensil model artifacts. The following command will produce `*.tmodel`, `*.tdata` and `*.tprog` files under the `sdcard/baseline/` directory. The `*.tmodel` file is a JSON-formatted description of the Tensil model, which references `*.tdata` (model weights) and `*.tprog` (model program for the Tensil processor.)
 
-```
+```bash
 tensil compile \
     -a /demo/arch/zcu104.tarch \
     -m /demo/models/resnet20v2_cifar.onnx \
@@ -122,7 +122,7 @@ Click on _Configuration_ dropdown and choose _All configurations_. Then, under _
 
 Now, let’s copy all necessary source files. For this you will need to clone the tutorial GitHub repository as well as the Tensil GitHub repository for the embedded driver sources. But first, let's copy architecture definitions for the embedded driver from the output artifacts of Tensil RTL tool.
 
-```
+```bash
 cp \
     <tutorial repository root>/vivado/baseline/architecture_params.h \
     <Vitis workspace root>/tensil_zcu104/src/
@@ -130,7 +130,7 @@ cp \
 
 Next, copy the embedded driver.
 
-```
+```bash
 cp -r \
     <Tensil repository root>/drivers/embedded/tensil \
     <Vitis workspace root>/tensil_zcu104/src/
@@ -138,7 +138,7 @@ cp -r \
 
 Lastly, copy the ZCU104 embedded application. Note that `platform.h` copied in the previous step gets overwritten.
 
-```
+```bash
 cp -r \
     <tutorial repository root>/vitis/* \
     <Vitis workspace root>/tensil_zcu104/src/
@@ -162,7 +162,7 @@ The following diagram shows how this may work in a simpler 100MHz to 400MHz, 512
 
 First let’s use the `-d` argument in Tensil RTL command to generate the RTL with 512-bit interfaces.
 
-```
+```bash
 tensil rtl -a /demo/arch/zcu104.tarch -d 512 -s true -t vivado/dual_clock
 ```
 
@@ -188,7 +188,7 @@ We start by creating a new [Tensil architecture](https://github.com/tensil-ai/te
 
 Run the following command to generate Verilog artifacts.
 
-```
+```bash
 tensil rtl \
     -a /demo/arch/zcu104_uram.tarch \
     -d 512 \
@@ -211,8 +211,13 @@ Now, let’s take a look at FPGA utilization for Ultra RAM design. Note that the
 
 Because we changed the Tensil architecture the new model needs to be compiled and copied to the SD card.
 
-```
-tensil compile -a /demo/arch/zcu104_uram.tarch -m /demo/models/resnet20v2_cifar.onnx -o "Identity:0" -s true -t sdcard/ultra_ram/
+```bash
+tensil compile \
+    -a /demo/arch/zcu104_uram.tarch \
+    -m /demo/models/resnet20v2_cifar.onnx \
+    -o "Identity:0" \
+    -s true \
+    -t sdcard/ultra_ram/
 ```
 
 You can skip the model compilation step and use the [`sdcard` directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
@@ -247,7 +252,7 @@ Thus, the first strategy will be to try keeping activations in local memory betw
 
 Run the following command and then copy the newly created model to the SD card.
 
-```
+```bash
 tensil compile \
     -a /demo/arch/zcu104_uram.tarch \
     -m /demo/models/resnet20v2_cifar.onnx \
@@ -269,7 +274,7 @@ With the `local-consts` strategy the inference expects all of the model weights 
 
 ![shared_local_consts](/media/2022/tensil_zcu104_resnet/shared_local_consts.svg)
 
-```
+```bash
 tensil compile \
     -a /demo/arch/zcu104_uram.tarch \
     -m /demo/models/resnet20v2_cifar.onnx \
@@ -285,7 +290,7 @@ Finally, the `local-vars-and-consts` strategy combines `local-vars` and `local-c
 
 ![shared_local_vars_and_consts](/media/2022/tensil_zcu104_resnet/shared_local_vars_and_consts.svg)
 
-```
+```bash
 tensil compile \
     -a /demo/arch/zcu104_uram.tarch \
     -m /demo/models/resnet20v2_cifar.onnx \
