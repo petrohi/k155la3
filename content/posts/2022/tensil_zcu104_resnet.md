@@ -19,7 +19,7 @@ slug: getting-resnet-to-300-fps-on-zcu104
 
 ## Introduction
 
-Sometimes the application requires pushing the performance to its limits. In this tutorial we will show how to optimize Tensil to run ResNet20 trained on CIFAR to reach the maximum performance. To do this we will use the powerful ZCU104 board and implement an embedded application to remove the overhead of running Linux OS and PYNQ. Importantly, we still won't quantize the model and use Tensil with 16-bit fixed points. We will demonstrate that running the CIFAR test data set shows very little accuracy drop when rounding down from the original 32-bit floating point of the [ResNet20 model](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/notebooks/resnet20v2_cifar.ipynb).
+Sometimes the application requires pushing the performance to its limits. In this tutorial we will show how to optimize [Tensil](https://www.tensil.ai/) to run [ResNet20 trained on CIFAR](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/notebooks/resnet20v2_cifar.ipynb) to reach the maximum performance. To do this we will use the powerful [ZCU104](https://www.xilinx.com/products/boards-and-kits/zcu104.html) board and implement an embedded application to remove the overhead of running Linux OS and PYNQ. Importantly, we still won't quantize the model and use Tensil with 16-bit fixed point data type. We will demonstrate that running the CIFAR test data set shows very little accuracy drop when rounding down from the original 32-bit floating point of the ResNet20 model.
 
 ![board](/media/2022/tensil_zcu104_resnet/board.jpg)
 
