@@ -1,5 +1,5 @@
 ---
-title: Getting ResNet to 300 fps on ZCU104
+title: Getting Tensil to run ResNet at 300 frames per second on ZCU104
 date: 2022-07-29T00:00:00
 categories: [projects, tensil, fpga]
 tags: [tensil, fpga]
