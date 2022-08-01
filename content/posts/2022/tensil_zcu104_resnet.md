@@ -4,7 +4,7 @@ date: 2022-07-29T00:00:00
 categories: [projects, tensil, fpga]
 tags: [tensil, fpga]
 language: en
-slug: getting-resnet-to-300-fps-on-zcu104
+slug: getting-tensil-to-run-resnet-at-300-fps-on-zcu104
 ---
 
 - [Introduction](#introduction)
