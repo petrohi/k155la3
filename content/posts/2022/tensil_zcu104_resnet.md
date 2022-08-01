@@ -19,7 +19,7 @@ slug: getting-resnet-to-300-fps-on-zcu104
 
 ## Introduction
 
-Sometimes the application requires pushing the performance to its limits. In this tutorial we will show how to optimize [Tensil](https://www.tensil.ai/) to run [ResNet20 trained on CIFAR](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/notebooks/resnet20v2_cifar.ipynb) to reach the maximum performance. To do this we will use the powerful [ZCU104](https://www.xilinx.com/products/boards-and-kits/zcu104.html) board and implement an embedded application to remove the overhead of running Linux OS and PYNQ. Importantly, we still won't quantize the model and use Tensil with 16-bit fixed point data type. We will demonstrate that running the CIFAR test data set shows very little accuracy drop when rounding down from the original 32-bit floating point of the ResNet20 model.
+Sometimes the application requires pushing the performance to its limits. In this tutorial we will show how to optimize [Tensil](https://www.tensil.ai/) running [ResNet20 trained on CIFAR](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/notebooks/resnet20v2_cifar.ipynb) for the maximum performance. To do this, we will use the powerful [ZCU104](https://www.xilinx.com/products/boards-and-kits/zcu104.html) board and implement an embedded application to remove the overhead of running Linux OS and PYNQ. Importantly, we still won't quantize the model and use Tensil with 16-bit fixed point data type. We will demonstrate that running the CIFAR test data set shows very little accuracy drop when rounding down from the original 32-bit floating point.
 
 ![board](/media/2022/tensil_zcu104_resnet/board.jpg)
 
@@ -42,12 +42,12 @@ docker run \
     bash
 ```
 
-You will also need to clone the tutorial [GitHub repository](https://github.com/petrohi/tensil-zcu104-tutorial). It contains necessary source files as well as all of the intermediate artifacts in case you would like to skip running Tensil tools or Vivado. If you choose to run Tensil Docker image, make sure to launch Tensil container in the GitHub repository directory.
+You will also need to clone the tutorial [GitHub repository](https://github.com/petrohi/tensil-zcu104-tutorial). It contains necessary source files as well as all of the intermediate artifacts in case you would like to skip running Tensil tools or Vivado.
 
 
 ## Baseline solution
 
-We start with the baseline solution, in which we will create a working Tensil application with default design choices. Once we have a stable working solution we will look at opportunities to improve its performance. For each such opportunity we will measure actual performance and hopefully see the improvement materialize.
+We start with the baseline solution, in which we will create a working Tensil application with default design choices. Once we have a stable working solution we will look at opportunities to improve its performance.
 
 
 ### Tensil RTL and Vivado implementation
@@ -99,7 +99,7 @@ Specifying 32 by 32 systolic array size contributed to the high utilization of m
 
 ### ResNet compiled for Tensil
 
-The ZCU104 board supports an SD card interface. This allows us to use Tensil embedded driver file system functionality to read the ResNet model and a set of images to test it with. The set we will be using is the test set for the original [CIFAR-10 data set](https://www.cs.toronto.edu/~kriz/cifar.html). The ResNet model is trained with the separate training and validation sets from CIFAR-10. The test set is what the model hasn’t seen in training and therefore gives an objective estimate of its performance. The CIFAR-10 provides the test set of 10,000 images in several formats. We use [the binary format](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/sdcard/test_batch.bin) that is more suitable for the embedded application.
+The ZCU104 board supports an SD card interface. This allows us to use Tensil embedded driver file system functionality to read the ResNet model and a set of images to test it with. The set we will be using is the test set for the original [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html). The ResNet model is trained with the separate training and validation sets from the CIFAR-10. The test set is what the model hasn’t seen in training and therefore gives an objective estimate of its accuracy. The CIFAR-10 provides the test set of 10,000 images in several formats. We will use [the binary format](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/sdcard/test_batch.bin) that is more suitable for the embedded application.
 
 Let’s start with compiling the ResNet ONNX file to Tensil model artifacts. The following command will produce `*.tmodel`, `*.tdata` and `*.tprog` files under the `sdcard/baseline/` directory. The `*.tmodel` file is a JSON-formatted description of the Tensil model, which references `*.tdata` (model weights) and `*.tprog` (model program for the Tensil processor.)
 
@@ -137,7 +137,7 @@ Click on _Configuration_ dropdown and choose _All configurations_. Then, under _
 
 ![m](/media/2022/tensil_zcu104_resnet/m.png)
 
-Now, let’s copy all necessary source files. For this you will need to clone the [tutorial GitHub repository](https://github.com/petrohi/tensil-zcu104-tutorial) as well as the [Tensil GitHub repository](https://github.com/tensil-ai/tensil) for the embedded driver sources. But first, let's copy architecture definitions for the embedded driver from the output artifacts of Tensil RTL tool.
+Now, let’s copy all necessary source files. For this you will need to clone the [tutorial GitHub repository](https://github.com/petrohi/tensil-zcu104-tutorial) as well as the [Tensil GitHub repository](https://github.com/tensil-ai/tensil) for the embedded driver sources. But first, let's copy architecture parameters for the embedded driver from the output artifacts of Tensil RTL tool.
 
 ```bash
 cp \
@@ -177,7 +177,7 @@ After running the inference on the entire test data set the program will print t
 
 ## Dual clock solution
 
-The first optimization is based on the following observation. The Tensil RTL block is clocked at 100MHz. (We could clock it higher, but for the purpose of this tutorial let’s assume this is our maximum clock.) The Tensil block DRAM0 and DRAM1 ports are connected to AXI interfaces on the ZYNQ block. The instruction port is indirectly connected to the AXI on the ZYNQ block via AXI DMA. ZYNQ UltraScal+ AXI ports support up to 333MHz and a maximum of 128 bits of width. This gives us the opportunity to introduce a second clock domain for 333MHz while at the same time making the Tensil AXI ports wider. 
+The first optimization is based on the following observation. The Tensil RTL block is clocked at 100MHz. (We could clock it higher, but for the purpose of this tutorial let’s assume this is our maximum clock.) The Tensil block DRAM0 and DRAM1 ports are connected to AXI interfaces on the ZYNQ block. The instruction port is indirectly connected to the AXI on the ZYNQ block via AXI DMA. ZYNQ UltraScal+ AXI ports support up to 333MHz and the maximum width of 128 bits. This gives us the opportunity to introduce a second clock domain for 333MHz while at the same time making the Tensil AXI ports wider. 
 
 The following diagram shows how this may work in a simpler 100MHz to 400MHz, 512- to 128-bit conversion. Each clock in the Tensil clock domain would pump one 512-bit word in or out. This would match 4 clocks in the ZYNQ clock domain with 512-bit word split to or composed from 4 128-bit words.
 
@@ -189,19 +189,19 @@ First let’s use the `-d` argument in Tensil RTL command to generate the RTL wi
 tensil rtl -a /demo/arch/zcu104.tarch -d 512 -s true -t vivado/dual_clock
 ```
 
-The AXI SmartConnect block allows for both AXI width adjustment and separate clock domains. We change our block design by inserting these blocks in all three connections between Tensil RTL and the ZYNQ AXI ports. Again, we provide [scripted block design](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vivado/dual_clock/tensil_zcu104.tcl), so that you won’t need to connect blocks manually. We suggest following the [steps above](#tensil-rtl-and-vivado-implementation) to create a new Vivado project for the dual clock design. Following is how the dual clock block design looks like.
+The AXI SmartConnect block allows for both AXI width adjustment and separate clock domains. We change our block design by inserting these blocks in all three connections between Tensil RTL and the ZYNQ AXI ports. We suggest following the [steps above](#tensil-rtl-and-vivado-implementation) to create a new Vivado project for the dual clock design. Again, we provide [scripted block design](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vivado/dual_clock/tensil_zcu104.tcl), so that you won’t need to connect blocks manually. Following is how the dual clock block design looks like.
 
 [![dual_clock_design](/media/2022/tensil_zcu104_resnet/dual_clock_design.png)](/media/2022/tensil_zcu104_resnet/dual_clock_design.png)
 
 You can skip the Vivado implementation and grab the dual clock XSA file [here](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vivado/dual_clock/tensil_zcu104_wrapper.xsa).
 
-Let’s take a look at FPGA utilization for dual clock design. Note that the increase is in LUT, LUTRAM and FF and not in BRAM or DSP. The reason is that we did not change the Tensil architecture, which would affect BRAM and DSP.
+Let’s take a look at FPGA utilization for dual clock design. Note that the utilization for LUT, LUTRAM and FF has increased due to added AXI SmartConnect blocks and wider Tensil intefaces. BRAM and DSP utilization stayed the same since we did not change the Tensil architecture.
 
 ![dual_clock_util](/media/2022/tensil_zcu104_resnet/dual_clock_util.png)
 
-Now, we suggest you also create a new Vitis workspace for the dual clock design and follow the [steps above](#tensil-for-vitis-embedded-applications) to get the inference running. The model remains unchanged since we did not change the architecture for the Tensil.
+Now, we suggest you also create a new Vitis workspace for the dual clock design and follow the [steps above](#tensil-for-vitis-embedded-applications) to get the inference running. The model remains unchanged since we did not change the Tensil architecture.
 
-For the dual clock solution we are getting an average of 152.04 frames per second, a meaningful improvement over the baseline. This improvement is roughly proportional to the ratio of time spent in moving data to and from the FPGA to the time spent in internal data movement and computation.
+For the dual clock solution we are getting an average of 152.04 frames per second--a meaningful improvement over the baseline. This improvement is roughly proportional to the ratio of time spent in moving data to and from the FPGA to the time spent in internal data movement and computation.
 
 ## Ultra RAM solution
 
@@ -259,31 +259,31 @@ tensil compile \
     -t sdcard/ultra_ram/
 ```
 
-You can skip the model compilation step and use the [`sdcard` directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
+You can skip the model compilation step and use the `sdcard` [directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
 
 We again, suggest you create a new Vitis workspace for the Ultra RAM design and follow the [steps above](#tensil-for-vitis-embedded-applications) to get the inference running. Make sure to uncomment the correct `MODEL_FILE_PATH` [definition](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vitis/main.c#L18) for the newly created `*.tmodel` file.
 
-For the Ultra RAM solution we are getting an average of 170.16 frames per second, another meaningful improvement. This improvement is purely based on having larger on-chip memory. With a small on-chip memory the Tensil compiler is forced to partition ResNet convolution layers into multiple load-compute-save blocks. This, in turn, requires that the activations are loaded multiple times since weights are loaded only once. (This is called weight-stationery ordering. In the future we plan to add an option for input-stationery ordering.)
+For the Ultra RAM solution we are getting an average of 170.16 frames per second, another meaningful improvement. This improvement is based purely on having larger on-chip memory. With a small on-chip memory the Tensil compiler is forced to partition ResNet convolution layers into multiple load-compute-save blocks. This, in turn, requires that the same input activations are loaded multiple times, assuming weights are loaded only once. This is called weight-stationary dataflow. In the future, we will add an option for input-stationary dataflow. With it, when partitioned, the input activations are loaded once and the same weights are loaded multiple times.
 
 The following diagram shows such partitioned compilation. Layer N has 2 stages. In each stage a unique subset of weights is loaded. Then, each stage is further split into 2 partitions. Partition is defined by the largest amount of weights, input and output activations, and intermediate results that fit local memory and accumulators.
 
 ![multi_stage](/media/2022/tensil_zcu104_resnet/multi_stage.svg)
 
-Having larger on-chip memory reduces this partitioning and, by extension, the need to load the same data multiple times. The following diagram shows how layer N now has 1 stage and 1 partition that fits larger local memory and accumulators allowing weights and activations to be loaded only once.
+Having larger on-chip memory reduces this partitioning and, by extension, the need to load the same data multiple times. The following diagram shows how layer N now has 1 stage and 1 partition that fits larger local memory and accumulators, which allows weights and activations to be loaded only once.
 
 ![single_stage](/media/2022/tensil_zcu104_resnet/single_stage.svg)
 
 ## Solutions with large local memory
 
-The final optimization is based on the same hardware design and Tensil architecture definition we created to support the Ultra RAM. We will only change the Tensil compiler strategy.
+The final optimization is based on the same hardware design and Tensil architecture we created to support the Ultra RAM. We will only change the Tensil compiler strategy.
 
-As we mentioned previously, the Tensil compiler, by default, assumes that model layers will be much larger in terms of its weights and activations size than the local memory available on the FPGA. This is definitely true for large models and for low-end FPGA devices. For small and medium sized models running on large FPGA devices there is a distinct possibility that local memory is large enough to contain the entire weights for each layer plus activations for the current and the previous layer in the model.
+As we mentioned previously, the Tensil compiler, by default, assumes that model is much larger in terms of its weights and activations than the local memory available on the FPGA. This is true for large models and for low-end FPGA devices. For small and medium sized models running on large FPGA devices there is a possibility that local memory is large enough to contain the weights plus input and output activations for each layer.
 
 To see if this strategy is worth trying, we first look at the output of Tensil compiler for the ZCU104 architecture with the Ultra RAM.
 
 ![compiler_summary](/media/2022/tensil_zcu104_resnet/compiler_summary.svg)
 
-The maximum number for stages and partitions being both 1 inform us that none of the layers were partitioned, or, in other words each layer’s weights and activations did fit in local memory. Another way to guide this decision is to use the `--layers-summary true` option with the Tensil compiler, which will report the summary per each layer with local and accumulator utilization.
+The maximum number for stages and partitions being both 1 inform us that none of the layers were partitioned, or, in other words, each layer’s weights and activations did fit in the local memory. Another way to guide this decision is to use the `--layers-summary true` option with the Tensil compiler, which will report the summary per each layer with local and accumulator utilization.
 
 ![layers_summary](/media/2022/tensil_zcu104_resnet/layers_summary.svg)
 
@@ -303,15 +303,15 @@ tensil compile \
     -t sdcard/ultra_ram_local_vars/
 ```
 
-You can skip all of the model compilation steps in this section and use the [`sdcard` directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
+You can skip all of the model compilation steps in this section and use the `sdcard` [directory](https://github.com/petrohi/tensil-zcu104-tutorial/tree/main/sdcard) in our GitHub repository.
 
 This time, you can reuse the Vitis workspace for the Ultra RAM solution and simply uncomment the correct `MODEL_FILE_PATH` [definition](https://github.com/petrohi/tensil-zcu104-tutorial/blob/main/vitis/main.c#L18) for each newly created `*.tmodel` file.
 
 With the `local-vars` strategy we are getting an average of 214.66 frames per second.
 
-Now that we have seen the improvement allowed by large on-chip memory, let’s see if any other load and save operations can be avoided. With `local-vars` strategy we load model input image and weights and then save its output predictions. What if there would be enough on-chip memory to keep weights loaded? There is a strategy for this!
+Now that we have seen the improvement allowed by large on-chip memory, let’s see if any other load and save operations can be avoided. With `local-vars` strategy we load the input image and the weights and then save the output predictions. What if there would be enough on-chip memory to keep the weights loaded? There is a strategy for this!
 
-With the `local-consts` strategy the inference expects all of the model weights to be preloaded to the local memory before the inference. This is the job of the driver. If it loads the model compiled with `local-consts` strategy it preloads its weights from `*.tdata` file into Tensil local memory. The following diagram shows this strategy.
+With the `local-consts` strategy the inference expects all of the model weights to be preloaded to the local memory before the inference. This is the job for the driver. When the Tensil driver loads the model compiled with `local-consts` strategy it preloads its weights from `*.tdata` file into the local memory. The following diagram shows this strategy.
 
 ![shared_local_consts](/media/2022/tensil_zcu104_resnet/shared_local_consts.svg)
 
@@ -347,7 +347,7 @@ With the `local-vars-and-consts` strategy we are getting an average of 293.58 fr
 
 # Conclusion
 
-In this tutorial we demonstrated how improvements in Vivado hardware design, leveraging Xilinx Ultra RAM, and advanced strategies in Tensil compiler can improve the performance of inference for the ResNet20 model running on the ZCU104 board.
+In this tutorial we demonstrated how improving the Vivado hardware design, leveraging Xilinx Ultra RAM, and using the advanced compiler strategies can improve the performance of inference.
 
 The following chart summarizes presented solutions and their frames per second performance.
 
